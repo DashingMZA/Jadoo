@@ -1,0 +1,27 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for Jadoo's main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "dialog:default",
+    "clipboard-manager:allow-write-text",
+    "opener:default",
+    "opener:allow-open-url",
+    "autostart:default",
+    "process:allow-restart",
+    "updater:default",
+    "fs:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "ffmpeg", "sidecar": true },
+        { "name": "ffprobe", "sidecar": true }
+      ]
+    }
+  ]
+}

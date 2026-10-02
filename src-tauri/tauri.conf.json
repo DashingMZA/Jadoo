@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Jadoo",
+  "version": "1.0.0",
+  "identifier": "bond.jadoo.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../out"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Jadoo",
+        "width": 1180,
+        "height": 910,
+        "minWidth": 1000,
+        "minHeight": 910,
+        "resizable": false,
+        "maximizable": false,
+        "visible": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "Zaheer Ahmad",
+    "category": "Video",
+    "shortDescription": "Batch video logo overlay",
+    "longDescription": "Jadoo overlays your logo onto an entire folder of videos in one batch run — pick a layout profile (position, size, transparency) per video size/aspect-ratio, and export at your chosen quality.",
+    "copyright": "Copyright © 2026 Zaheer Ahmad. All rights reserved.",
+    "externalBin": ["binaries/ffmpeg", "binaries/ffprobe"],
+    "resources": ["sample-videos/**/*", "sample-videos.json"],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/REPLACE_WITH_YOUR_GITHUB_USERNAME/REPLACE_WITH_YOUR_REPO_NAME/releases/latest/download/latest.json"
+      ],
+      "pubkey": "REPLACE_WITH_YOUR_UPDATER_PUBLIC_KEY"
+    }
+  }
+}

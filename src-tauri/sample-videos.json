@@ -1,0 +1,17 @@
+{
+  "byResolutionLabel": {
+    "9:16 Vertical (1080x1920) — Reels/Shorts/TikTok": "https://drive.usercontent.google.com/download?id=1u7LuTcbdCtrMs9kRU1SXU0onaCrBK6d4&export=download",
+    "16:9 Horizontal (1920x1080) — YouTube": "https://drive.usercontent.google.com/download?id=1c5tG6-HzF8_M_nsHMxVNO0BAWNhKLNSV&export=download",
+    "1:1 Square (1080x1080) — Feed post": "https://drive.usercontent.google.com/download?id=1FSRxEMKYlgSA3aGdu16lG7yQWF1r_5sa&export=download",
+    "4:5 Portrait (1080x1350) — Instagram feed": "https://drive.usercontent.google.com/download?id=1J5dFh50U8v244ou7xz6WWnmhXzUoQGEa&export=download",
+    "9:16 Vertical (720x1280)": "https://drive.usercontent.google.com/download?id=1W108-hYd4VvJW2VQu-CYw0x3HlPQLcsJ&export=download",
+    "16:9 Horizontal (1280x720)": "https://drive.usercontent.google.com/download?id=1-fh7tO2P_RsJPQ1vqjLOyUfxqpWm8sq5&export=download"
+  },
+  "byAspect": {
+    "16:9": "https://drive.usercontent.google.com/download?id=1c5tG6-HzF8_M_nsHMxVNO0BAWNhKLNSV&export=download",
+    "9:16": "https://drive.usercontent.google.com/download?id=1u7LuTcbdCtrMs9kRU1SXU0onaCrBK6d4&export=download",
+    "1:1": "https://drive.usercontent.google.com/download?id=1FSRxEMKYlgSA3aGdu16lG7yQWF1r_5sa&export=download",
+    "4:5": "https://drive.usercontent.google.com/download?id=1J5dFh50U8v244ou7xz6WWnmhXzUoQGEa&export=download",
+    "2:3": ""
+  }
+}

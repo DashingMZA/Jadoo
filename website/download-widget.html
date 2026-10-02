@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!--
+  Jadoo — Download widget
+  ------------------------
+  Ye ek standalone, self-contained HTML/CSS/JS hai — apni website
+  (jadoo.bond) ke kisi bhi page mein <iframe> se embed karo, ya isi
+  <div id="jadoo-download">...</div> wale hisse ko copy-paste kar do apne
+  page ke HTML mein (script tag ke sath).
+
+  Kaam kaise karta hai:
+  - GitHub Releases API (public, koi auth/backend nahi chahiye) se khud
+    LATEST release ka data fetch karta hai.
+  - Visitor ka OS (Windows/macOS/Linux) user-agent se guess karta hai aur
+    us OS ke liye sahi installer ka "Download" button dikhata hai.
+  - Neeche baaki platforms ke links bhi list ho jate hain.
+  - Files asal mein GitHub Releases se serve hoti hain (seedha download
+    hota hai) — koi extra hosting/bandwidth cost aapki apni website pe
+    nahi padti.
+
+  SETUP: neeche `GITHUB_OWNER` aur `GITHUB_REPO` apne actual GitHub
+  username/repo se badal do.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Download Jadoo</title>
+<style>
+  #jadoo-download {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+    max-width: 480px;
+    margin: 0 auto;
+    background: #1a1c22;
+    border: 1px solid #2b2e37;
+    border-radius: 14px;
+    padding: 28px;
+    color: #eef0f4;
+    text-align: center;
+  }
+  #jadoo-download .jd-version {
+    font-size: 12.5px;
+    color: #9497a3;
+    margin-bottom: 18px;
+  }
+  #jadoo-download .jd-primary-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #7c5cff;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 13px 26px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+  }
+  #jadoo-download .jd-primary-btn:hover { filter: brightness(1.08); }
+  #jadoo-download .jd-other-platforms {
+    margin-top: 18px;
+    font-size: 12.5px;
+    color: #9497a3;
+  }
+  #jadoo-download .jd-other-platforms a {
+    color: #9497a3;
+    text-decoration: underline;
+    margin: 0 6px;
+    cursor: pointer;
+  }
+  #jadoo-download .jd-other-platforms a:hover { color: #eef0f4; }
+  #jadoo-download .jd-error {
+    color: #ef5b5b;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<div id="jadoo-download">
+  <div class="jd-version">Loading latest version…</div>
+  <div class="jd-buttons"></div>
+  <div class="jd-other-platforms"></div>
+</div>
+
+<script>
+(function () {
+  // ---- SETUP: apna GitHub username/repo yahan daalo ----------------------
+  var GITHUB_OWNER = "REPLACE_WITH_YOUR_GITHUB_USERNAME";
+  var GITHUB_REPO = "REPLACE_WITH_YOUR_REPO_NAME";
+  // -------------------------------------------------------------------------
+
+  var root = document.getElementById("jadoo-download");
+  var versionEl = root.querySelector(".jd-version");
+  var buttonsEl = root.querySelector(".jd-buttons");
+  var otherEl = root.querySelector(".jd-other-platforms");
+
+  function detectOS() {
+    var ua = navigator.userAgent;
+    if (/Windows/i.test(ua)) return "windows";
+    if (/Macintosh|Mac OS X/i.test(ua)) return "macos";
+    if (/Linux/i.test(ua)) return "linux";
+    return "unknown";
+  }
+
+  // Asset filename patterns jo tauri-action generate karta hai, per platform.
+  function classify(assetName) {
+    var n = assetName.toLowerCase();
+    if (n.endsWith(".msi")) return { os: "windows", label: "Windows (.msi)" };
+    if (n.endsWith("-setup.exe") || n.endsWith(".exe")) return { os: "windows", label: "Windows (.exe)" };
+    if (n.includes("aarch64") && n.endsWith(".dmg")) return { os: "macos", label: "macOS (Apple Silicon)" };
+    if ((n.includes("x64") || n.includes("x86_64")) && n.endsWith(".dmg")) return { os: "macos", label: "macOS (Intel)" };
+    if (n.endsWith(".dmg")) return { os: "macos", label: "macOS" };
+    if (n.endsWith(".appimage")) return { os: "linux", label: "Linux (.AppImage)" };
+    if (n.endsWith(".deb")) return { os: "linux", label: "Linux (.deb)" };
+    if (n.endsWith(".rpm")) return { os: "linux", label: "Linux (.rpm)" };
+    return null;
+  }
+
+  function button(url, label, primary) {
+    var a = document.createElement("a");
+    a.href = url;
+    a.className = primary ? "jd-primary-btn" : "";
+    a.textContent = (primary ? "⬇ Download for " : "") + label;
+    if (!primary) {
+      a.style.cssText = "";
+    }
+    return a;
+  }
+
+  fetch("https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/releases/latest")
+    .then(function (r) {
+      if (!r.ok) throw new Error("Release fetch failed");
+      return r.json();
+    })
+    .then(function (release) {
+      var tag = release.tag_name || "";
+      versionEl.textContent = "Latest version: " + tag;
+
+      var assets = (release.assets || [])
+        .map(function (a) {
+          var info = classify(a.name);
+          return info ? { url: a.browser_download_url, name: a.name, os: info.os, label: info.label } : null;
+        })
+        .filter(Boolean);
+
+      var myOS = detectOS();
+      var primary = assets.find(function (a) { return a.os === myOS; }) || assets[0];
+
+      if (!primary) {
+        versionEl.textContent = "";
+        buttonsEl.innerHTML = '<div class="jd-error">Koi downloadable file nahi mili is release mein.</div>';
+        return;
+      }
+
+      buttonsEl.appendChild(button(primary.url, primary.label, true));
+
+      var others = assets.filter(function (a) { return a !== primary; });
+      if (others.length) {
+        var wrap = document.createElement("div");
+        wrap.textContent = "Ya phir: ";
+        others.forEach(function (a, i) {
+          var link = document.createElement("a");
+          link.href = a.url;
+          link.textContent = a.label;
+          wrap.appendChild(link);
+          if (i < others.length - 1) wrap.appendChild(document.createTextNode(" · "));
+        });
+        otherEl.appendChild(wrap);
+      }
+    })
+    .catch(function () {
+      versionEl.textContent = "";
+      buttonsEl.innerHTML =
+        '<div class="jd-error">Download links abhi load nahi ho sake. ' +
+        '<a href="https://github.com/' + GITHUB_OWNER + '/' + GITHUB_REPO + '/releases/latest" style="color:#7c5cff">' +
+        "GitHub Releases page par jaayein</a>.</div>";
+    });
+})();
+</script>
+
+</body>
+</html>
