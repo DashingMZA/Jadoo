@@ -20,8 +20,8 @@
     "fetch:ffmpeg": "node scripts/fetch-ffmpeg.mjs",
     "prepare:ffmpeg": "node scripts/fetch-ffmpeg.mjs && node scripts/prepare-ffmpeg.mjs",
     "app:icon": "tauri icon",
-    "app:dev": "npm run prepare:ffmpeg && tauri dev",
-    "app:build": "npm run prepare:ffmpeg && tauri build"
+    "app:dev": "npm run prepare:ffmpeg && dotenv -e .env -- tauri dev",
+    "app:build": "npm run prepare:ffmpeg && dotenv -e .env -- tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
@@ -43,6 +43,7 @@
     "@types/node": "^24.13.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "10.10.0",
     "eslint-config-next": "16.3.5",
     "prettier": "3.9.6",
