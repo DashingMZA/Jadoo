@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "identifier": "bond.jadoo.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "pnpm run dev",
+    "beforeBuildCommand": "pnpm run build",
     "devUrl": "http://localhost:1420",
     "frontendDist": "../out"
   },
@@ -67,7 +67,7 @@
       "endpoints": [
         "https://github.com/REPLACE_WITH_YOUR_GITHUB_USERNAME/REPLACE_WITH_YOUR_REPO_NAME/releases/latest/download/latest.json"
       ],
-      "pubkey": "REPLACE_WITH_YOUR_UPDATER_PUBLIC_KEY"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg0RDNERDI2NzIzNjdBOEIKUldTTGVqWnlKdDNUaEt1cElTaXZqYjFzN1QwYXBabVBPVGE3WVY3S3FvSEh1TFVDeXNLOG5YK2EK"
     }
   }
 }

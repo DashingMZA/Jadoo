@@ -3,23 +3,12 @@ node_modules/
 .next/
 out/
 *.tsbuildinfo
-package-lock.json
 npm-debug.log*
 
 # Rust / Tauri
 src-tauri/target/
 src-tauri/gen/
-
-# ffmpeg/ffprobe binaries — ye auto-download hote hain (scripts/fetch-ffmpeg.mjs,
-# CI mein khud chalta hai) — GitHub ka 100MB/file limit hai aur ye ~130MB
-# each hain, isliye kabhi commit NAHI karne. Plain-named files aur
-# target-triple-suffix wali renamed copies, dono ignore.
-src-tauri/binaries/ffmpeg
-src-tauri/binaries/ffmpeg.exe
-src-tauri/binaries/ffprobe
-src-tauri/binaries/ffprobe.exe
-src-tauri/binaries/ffmpeg-*
-src-tauri/binaries/ffprobe-*
+src-tauri/binaries/
 
 # OS cruft
 .DS_Store
