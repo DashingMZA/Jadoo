@@ -7,11 +7,11 @@ chahiye end-user ko.
 **GitHub pe publish karna, releases banana, auto-update, aur apni website pe
 download button lagana — sab `RELEASES.md` mein hai.**
 
-Maine is project ko yahan bana kar test kiya hai: `npm install` (354
-packages), `npx tsc --noEmit` (0 errors), aur `npx next build` (saari 4
-pages — Home, Settings, Donation, About — successfully static-export ho
-gayi). Ye confirm karta hai ke **frontend code sahi hai aur builds hota
-hai**. Rust/Tauri wala hissa (`src-tauri/`) is sandbox mein compile nahi ho
+Project ka package manager **pnpm** hai (`packageManager` field,
+`pnpm-lock.yaml`, CI sab pnpm use karte hain) — maine apne test-sandbox mein
+sirf verification ke liye `npm install`/`npx` use kiya tha (wahan pnpm
+nahi tha), lekin aapko hamesha `pnpm` hi use karna hai, jaisa neeche steps
+mein hai. Rust/Tauri wala hissa (`src-tauri/`) is sandbox mein compile nahi ho
 saka kyunke yahan Rust toolchain available nahi — wo aapko apne Windows
 machine pe pehli baar `pnpm tauri dev` chalate waqt build hoga. Maine har
 Rust API (tray, close-to-tray, autostart, sidecar) current Tauri v2 docs se

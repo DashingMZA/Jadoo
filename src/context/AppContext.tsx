@@ -9,20 +9,10 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  autostart,
-  getAppPreferences,
-  onBatchProgress,
-  saveAppPreferences,
-} from "@/lib/tauri-api";
+import { autostart, getAppPreferences, onBatchProgress, saveAppPreferences } from "@/lib/tauri-api";
 import { localeDir, translate, type TranslationKey } from "@/locales";
 import { ACCENT_COLORS } from "@/lib/accent-colors";
-import type {
-  AppPreferences,
-  BatchProgressEvent,
-  Language,
-  ThemeMode,
-} from "@/lib/types";
+import type { AppPreferences, BatchProgressEvent, Language, ThemeMode } from "@/lib/types";
 
 const DEFAULT_PREFERENCES: AppPreferences = {
   language: "en",
@@ -51,18 +41,15 @@ function resolveSystemPrefersDark(): boolean {
 
 function applyTheme(mode: ThemeMode, accentColor: string) {
   if (typeof document === "undefined") return;
-  const resolved =
-    mode === "system" ? (resolveSystemPrefersDark() ? "dark" : "light") : mode;
+  const resolved = mode === "system" ? (resolveSystemPrefersDark() ? "dark" : "light") : mode;
   document.documentElement.dataset.theme = resolved;
   document.documentElement.style.setProperty("--accent", accentColor);
-  const contrast =
-    ACCENT_COLORS.find((c) => c.value === accentColor)?.contrast ?? "#ffffff";
+  const contrast = ACCENT_COLORS.find((c) => c.value === accentColor)?.contrast ?? "#ffffff";
   document.documentElement.style.setProperty("--accent-contrast", contrast);
 }
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  const [preferences, setPreferences] =
-    useState<AppPreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] = useState<AppPreferences>(DEFAULT_PREFERENCES);
   const [loaded, setLoaded] = useState(false);
   const [batchStatus, setBatchStatus] = useState<BatchStatus>("idle");
   const unlistenRef = useRef<(() => void) | null>(null);
@@ -82,10 +69,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           } catch {
             // best-effort — koi mushkil aaye to chup chap aage badho
           }
-          setPreferences((prev) => ({
-            ...prev,
-            autostartDefaultApplied: true,
-          }));
+          setPreferences((prev) => ({ ...prev, autostartDefaultApplied: true }));
         }
       })
       .catch(() => {})
@@ -105,8 +89,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     applyTheme(preferences.themeMode, preferences.accentColor);
     if (preferences.themeMode !== "system") return;
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const handler = () =>
-      applyTheme(preferences.themeMode, preferences.accentColor);
+    const handler = () => applyTheme(preferences.themeMode, preferences.accentColor);
     mq?.addEventListener("change", handler);
     return () => mq?.removeEventListener("change", handler);
   }, [preferences.themeMode, preferences.accentColor]);
@@ -137,14 +120,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo<AppContextValue>(
-    () => ({
-      preferences,
-      setLanguage,
-      setThemeMode,
-      setAccentColor,
-      t,
-      batchStatus,
-    }),
+    () => ({ preferences, setLanguage, setThemeMode, setAccentColor, t, batchStatus }),
     [preferences, setLanguage, setThemeMode, setAccentColor, t, batchStatus],
   );
 

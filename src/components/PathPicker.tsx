@@ -11,13 +11,7 @@ interface PathPickerProps {
   placeholder?: string;
 }
 
-export function PathPicker({
-  label,
-  value,
-  onChange,
-  kind,
-  placeholder,
-}: PathPickerProps) {
+export function PathPicker({ label, value, onChange, kind, placeholder }: PathPickerProps) {
   const { t } = useAppContext();
 
   async function browse() {

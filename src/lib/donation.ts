@@ -17,42 +17,25 @@ export interface CryptoOption {
 }
 
 export const CRYPTO_OPTIONS: CryptoOption[] = [
-  {
-    coin: "USDT",
-    network: "TRX Tron (TRC-20)",
-    address: "TSuxRZsBCSpRwVAgNoUih1r4zqaBFT6AVN",
-  },
-  {
-    coin: "USDT",
-    network: "BNB Smart Chain (BEP-20)",
-    address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705",
-  },
-  {
-    coin: "USDT",
-    network: "TON - The Open Network",
-    address: "UQBQGZuYHj1fDYVHu85dF8EobdvbfLHauQ1Vmu3YSGaWLV36",
-  },
-  {
-    coin: "USDT",
-    network: "SOL - Solana",
-    address: "5kXZX68o1331o9DnNf5TMBBZ3i89gv7nLqH4u6mMZU73",
-  },
-  {
-    coin: "USDT",
-    network: "APT - Aptos",
-    address:
-      "0x9ecd779235ec3d7c1b3e99c37deda42a99c03a24a791ed30de2373e5b4c1f944",
-  },
-  {
-    coin: "USDT",
-    network: "DOT - Polkadot",
-    address: "158Dp11Ya2eZbWi21AauuTcyZSwbfR1KnWar6AFJBdnfTM8E",
-  },
-  {
-    coin: "USDT",
-    network: "XTZ - Tezos",
-    address: "tz2KG1zrupwDnHZwx9cx962yVsfBDvHfS8te",
-  },
+  { coin: "USDT", network: "TRX Tron (TRC-20)", address: "TSuxRZsBCSpRwVAgNoUih1r4zqaBFT6AVN" },
+  { coin: "USDT", network: "BNB Smart Chain (BEP-20)", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "USDT", network: "TON - The Open Network", address: "UQBQGZuYHj1fDYVHu85dF8EobdvbfLHauQ1Vmu3YSGaWLV36" },
+  { coin: "USDT", network: "SOL - Solana", address: "5kXZX68o1331o9DnNf5TMBBZ3i89gv7nLqH4u6mMZU73" },
+  { coin: "USDT", network: "APT - Aptos", address: "0x9ecd779235ec3d7c1b3e99c37deda42a99c03a24a791ed30de2373e5b4c1f944" },
+  { coin: "USDT", network: "DOT - Polkadot", address: "158Dp11Ya2eZbWi21AauuTcyZSwbfR1KnWar6AFJBdnfTM8E" },
+  { coin: "USDT", network: "XTZ - Tezos", address: "tz2KG1zrupwDnHZwx9cx962yVsfBDvHfS8te" },
+  { coin: "USDC", network: "BASE", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "USDC", network: "SOL - Solana", address: "5kXZX68o1331o9DnNf5TMBBZ3i89gv7nLqH4u6mMZU73" },
+  { coin: "USDC", network: "BNB Smart Chain (BEP-20)", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "USDC", network: "ETH -Ethereum (ERC-20)", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "USDC", network: "APT - Aptos", address: "0x9ecd779235ec3d7c1b3e99c37deda42a99c03a24a791ed30de2373e5b4c1f944" },
+  { coin: "USDC", network: "DOT - Polkadot", address: "158Dp11Ya2eZbWi21AauuTcyZSwbfR1KnWar6AFJBdnfTM8E" },
+  { coin: "USDC", network: "ALGO - Algorand", address: "MQHUA66R3EW6FPBBWAEZNLWPUMDR2RBXG5AXL3QAMHIBNB7YGIUQ7C65NQ" },
+  { coin: "BTC", network: "Bitcoin",  address: "125RMwvGfanp9pkGCd8XR352noYhBMGArG" },
+  { coin: "BTC", network: "BEP-20",  address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "BNB", network: "BEP-20", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "ETH", network: "BEP-20", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
+  { coin: "TRX", network: "TRC-20", address: "TSuxRZsBCSpRwVAgNoUih1r4zqaBFT6AVN" },
 ];
 
 export interface LinkOption {

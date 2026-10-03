@@ -30,13 +30,7 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h1 className="page-title">{t("history.title")}</h1>
           <p className="page-subtitle">{t("history.subtitle")}</p>
@@ -50,22 +44,15 @@ export default function HistoryPage() {
 
       <div className="card">
         {loading && <p className="hint">{t("common.loading")}</p>}
-        {!loading && records.length === 0 && (
-          <p className="hint">{t("history.noRuns")}</p>
-        )}
+        {!loading && records.length === 0 && <p className="hint">{t("history.noRuns")}</p>}
         {records.map((r) => {
           const isOpen = expanded === r.id;
           return (
             <div className="history-item" key={r.id}>
-              <div
-                className="history-header"
-                onClick={() => setExpanded(isOpen ? null : r.id)}
-              >
+              <div className="history-header" onClick={() => setExpanded(isOpen ? null : r.id)}>
                 <div>
                   <strong>{r.projectName || t("history.noName")}</strong>{" "}
-                  <span className="hint">
-                    — {new Date(r.startedAt).toLocaleString()}
-                  </span>
+                  <span className="hint">— {new Date(r.startedAt).toLocaleString()}</span>
                   <div className="hint">
                     {t("history.metaLine", {
                       profile: r.profileName,
@@ -75,13 +62,9 @@ export default function HistoryPage() {
                   </div>
                 </div>
                 <div>
-                  <span className="badge success">
-                    {t("history.done", { n: r.success })}
-                  </span>{" "}
+                  <span className="badge success">{t("history.done", { n: r.success })}</span>{" "}
                   {r.failed > 0 && (
-                    <span className="badge danger">
-                      {t("history.failed", { n: r.failed })}
-                    </span>
+                    <span className="badge danger">{t("history.failed", { n: r.failed })}</span>
                   )}
                 </div>
               </div>
@@ -89,12 +72,10 @@ export default function HistoryPage() {
               {isOpen && (
                 <div className="history-files">
                   <p className="hint">
-                    {t("history.input")}{" "}
-                    <span className="donation-addr">{r.inputFolder}</span>
+                    {t("history.input")} <span className="donation-addr">{r.inputFolder}</span>
                   </p>
                   <p className="hint">
-                    {t("history.output")}{" "}
-                    <span className="donation-addr">{r.outputFolder}</span>
+                    {t("history.output")} <span className="donation-addr">{r.outputFolder}</span>
                   </p>
                   {r.files.length > 0 && (
                     <div className="progress-list" style={{ marginTop: 8 }}>
@@ -103,15 +84,8 @@ export default function HistoryPage() {
                           <span>
                             {f.inputName} → {f.outputName}
                           </span>
-                          <span
-                            className={
-                              "badge " +
-                              (f.status === "done" ? "success" : "danger")
-                            }
-                          >
-                            {f.status === "done"
-                              ? t("file.done")
-                              : t("file.failed")}
+                          <span className={"badge " + (f.status === "done" ? "success" : "danger")}>
+                            {f.status === "done" ? t("file.done") : t("file.failed")}
                           </span>
                         </div>
                       ))}

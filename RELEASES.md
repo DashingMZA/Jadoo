@@ -93,10 +93,32 @@ Ye 2 cheezein degi:
 `src-tauri/tauri.conf.json` -> `plugins.updater.pubkey` mein
 `REPLACE_WITH_YOUR_UPDATER_PUBLIC_KEY` ki jagah wo public key paste karo.
 
-### Private key GitHub Secrets mein daalo
+### Private key GitHub Secrets mein daalo (CI ke liye)
 Repo -> **Settings -> Secrets and variables -> Actions -> New repository secret**:
 - `TAURI_SIGNING_PRIVATE_KEY` — private key file (`jadoo.key`) ka poora content
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — jo password generate karte waqt set kiya tha (khali ho to empty rehne do)
+
+### Local build ke liye bhi (taake `pnpm app:build` apne machine pe bhi chale)
+`createUpdaterArtifacts: true` hone ki wajah se `pnpm app:build` ab local
+machine pe bhi signing key maangta hai, warna ye error aata hai:
+```
+A public key has been found, but no private key. Make sure to set
+`TAURI_SIGNING_PRIVATE_KEY` environment variable.
+```
+Fix: project mein `.env.example` hai — usse `.env` naam se copy karo
+(`.env` gitignored hai, kabhi commit nahi hogi):
+```bash
+cp .env.example .env
+```
+Phir `.env` mein `TAURI_SIGNING_PRIVATE_KEY` ki value apni key ka **path**
+daal do (raw content paste karne ki zaroorat nahi, Tauri path bhi accept
+karta hai):
+```
+TAURI_SIGNING_PRIVATE_KEY=C:/Users/XeeBee/.tauri/jadoo.key
+TAURI_SIGNING_PRIVATE_KEY_PASSWORD=<jo password set kiya tha>
+```
+`pnpm app:dev`/`pnpm app:build` ab khud `.env` load kar lete hain
+(`dotenv-cli` se) — har baar manually env var set karne ki zaroorat nahi.
 
 ## 4. Updater endpoint set karo
 
@@ -109,6 +131,39 @@ https://github.com/REPLACE_WITH_YOUR_GITHUB_USERNAME/REPLACE_WITH_YOUR_REPO_NAME
 Apna username/repo daal do. Ye URL GitHub khud serve karta hai (`latest.json`
 CI build ke waqt khud ban jati hai aur release ke sath attach ho jati hai) —
 koi backend banane ki zaroorat nahi.
+
+## 4.5. Installer ka apna icon, install location — jo possible hai aur jo nahi
+
+**NSIS installer (`.exe`) ka icon** — ab `tauri.conf.json` mein
+`installerIcon`/`uninstallerIcon` set kar diya hai (aapke `icons/icon.ico`
+se), to agli build mein `Jadoo_x.x.x_x64-setup.exe` aur uska uninstaller
+dono apna Jadoo logo dikhayenge Explorer mein.
+
+**MSI (`.msi`) ka Explorer icon — ye customize NAHI hota**, aur ye Tauri ki
+limitation nahi, Windows ka khud ka fixed behavior hai: har `.msi` file,
+chahe kisi bhi tool se banayi ho, Explorer mein hamesha generic Windows
+Installer icon hi dikhati hai (jaise har `.docx` Word ka icon dikhata hai,
+content se farq nahi padta). Isliye recommend karta hoon: distribution ke
+liye **NSIS (`.exe`) ko primary rakho**, MSI ko sirf un organizations ke
+liye rehne do jo specifically MSI-based deployment (Group Policy waghera)
+chahte hain.
+
+**`.msi` file ka "Attributes: AI"** — ye bilkul normal/harmless hai, kisi
+build setting se related nahi. `A` = Archive (Windows har nayi/modified
+file pe khud laga deta hai, backup tools ke liye), `I` = content-Indexed
+(Windows Search ise index kar sakta hai). Koi action nahi leni.
+
+**Install location `%LOCALAPPDATA%\Programs\Jadoo` chahiye the** — NSIS
+already `installMode: "currentUser"` ki wajah se Program Files ki jagah
+per-user location mein install karta hai (admin rights nahi chahiye), lekin
+exact folder `%LOCALAPPDATA%\Jadoo` banta hai, `%LOCALAPPDATA%\Programs\Jadoo`
+nahi — ye Tauri ke NSIS template mein hardcoded hai, config se change nahi
+hoti (maine iska source code confirm kiya). Exact match ke liye ek custom
+`.nsi` template likhna padta, jo main yahan test nahi kar sakta tha isliye
+risk nahi liya — agar ye exactly chahiye to bata dena, try karte hain.
+**MSI hamesha `C:\Program Files\Jadoo\` mein jata hai** (admin chahiye) —
+ye bhi WiX/MSI ka standard behavior hai, Tauri isse change karne ka simple
+config option nahi deta.
 
 ## 5. Release banana
 
@@ -132,6 +187,29 @@ khud test kar sakte ho.
 
 Agli baar jab bhi naya version release karna ho: `tauri.conf.json` ka
 `version` field badlo, commit karo, naya tag push karo.
+
+### "Release mein sirf Source code (zip/tar.gz) hai, koi installer nahi"
+
+Ye matlab CI workflow ya to chala hi nahi, ya chal ke fail ho gaya (installer
+upload hone se pehle). "Source code" wale 2 assets GitHub khud, har
+tag/release pe automatically bana deta hai — humara workflow unhe nahi
+banata.
+
+Check karo: repo -> **Actions** tab -> jo bhi run `v1.0.0` tag ke liye hui
+ho, usko kholo. Agar wahan laal cross (failed) hai, to sabse pehli wajah
+yahi hogi jo abhi local build mein bhi aayi — **`TAURI_SIGNING_PRIVATE_KEY`
+secret GitHub pe add nahi hui** (upar "Private key GitHub Secrets mein
+daalo" section). Secret add karne ke baad:
+
+```bash
+git tag -d v1.0.0
+git push origin :refs/tags/v1.0.0
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Ye purana tag delete karke dobara banayega, jisse workflow dobara chalegi —
+is baar secrets set hain to installer files bhi upload honge.
 
 ## 6. Apni website (jadoo.bond) pe download button
 

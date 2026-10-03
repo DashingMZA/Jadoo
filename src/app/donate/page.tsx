@@ -25,16 +25,10 @@ export default function DonatePage() {
       <p className="page-subtitle">{t("donate.subtitle")}</p>
 
       <div className="tab-row">
-        <button
-          className={tab === "crypto" ? "active" : ""}
-          onClick={() => setTab("crypto")}
-        >
+        <button className={tab === "crypto" ? "active" : ""} onClick={() => setTab("crypto")}>
           {t("donate.crypto")}
         </button>
-        <button
-          className={tab === "other" ? "active" : ""}
-          onClick={() => setTab("other")}
-        >
+        <button className={tab === "other" ? "active" : ""} onClick={() => setTab("other")}>
           {t("donate.other")}
         </button>
       </div>
@@ -49,9 +43,7 @@ export default function DonatePage() {
                 key={i}
                 style={{
                   borderBottom:
-                    i < CRYPTO_OPTIONS.length - 1
-                      ? "1px solid var(--border)"
-                      : "none",
+                    i < CRYPTO_OPTIONS.length - 1 ? "1px solid var(--border)" : "none",
                   padding: "10px 0",
                 }}
               >
@@ -64,14 +56,8 @@ export default function DonatePage() {
                     {configured ? c.address : t("donate.notSetUp")}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => copyAddress(c.address)}
-                  disabled={!configured}
-                >
-                  {copied === c.address
-                    ? t("donate.copied")
-                    : t("donate.copyAddress")}
+                <button type="button" onClick={() => copyAddress(c.address)} disabled={!configured}>
+                  {copied === c.address ? t("donate.copied") : t("donate.copyAddress")}
                 </button>
               </div>
             );
@@ -86,10 +72,7 @@ export default function DonatePage() {
               key={l.id}
               className="donation-item"
               style={{
-                borderBottom:
-                  i < LINK_OPTIONS.length - 1
-                    ? "1px solid var(--border)"
-                    : "none",
+                borderBottom: i < LINK_OPTIONS.length - 1 ? "1px solid var(--border)" : "none",
                 padding: "10px 0",
               }}
             >
