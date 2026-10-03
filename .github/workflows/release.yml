@@ -1,13 +1,17 @@
+```yaml
 name: Release
 
-# Release matrix:
-# - Windows x64 (Windows 10/11): x86_64-pc-windows-msvc
-# - Windows x86 (32-bit; Windows 10): i686-pc-windows-msvc
-# - macOS Apple Silicon: aarch64-apple-darwin
-# - macOS Intel: x86_64-apple-darwin
-# - Ubuntu 22.04 / 24.04 / 26.04: x86_64-unknown-linux-gnu
+# Release targets:
+# - Windows 10/11 x64
+# - macOS Apple Silicon
+# - macOS Intel
+# - Ubuntu 22.04 / 24.04 / 26.04
 #
-# A Git tag beginning with "v" triggers the release.
+# A git tag beginning with "v" triggers the release.
+#
+# Example:
+#   git tag v1.0.1
+#   git push origin v1.0.1
 
 on:
   push:
@@ -22,6 +26,7 @@ jobs:
   release:
     strategy:
       fail-fast: false
+
       matrix:
         include:
           # macOS Apple Silicon
@@ -31,24 +36,24 @@ jobs:
             publish: true
 
           # macOS Intel
-          - platform: "macos-26-intel"
+          - platform: "macos-26"
             target: "x86_64-apple-darwin"
             args: "--target x86_64-apple-darwin"
             publish: true
 
-          # Ubuntu 22.04 - Linux release
+          # Ubuntu 22.04 - publish Linux artifact
           - platform: "ubuntu-22.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
             publish: true
 
-          # Ubuntu 24.04 - validation
+          # Ubuntu 24.04 - build validation
           - platform: "ubuntu-24.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
             publish: false
 
-          # Ubuntu 26.04 - validation
+          # Ubuntu 26.04 - build validation
           - platform: "ubuntu-26.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
@@ -60,12 +65,6 @@ jobs:
             args: "--target x86_64-pc-windows-msvc"
             publish: true
 
-          # Windows 10 x86 / 32-bit
-          - platform: "windows-latest"
-            target: "i686-pc-windows-msvc"
-            args: "--target i686-pc-windows-msvc"
-            publish: true
-
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -73,7 +72,8 @@ jobs:
         uses: actions/checkout@v5
 
       # IMPORTANT:
-      # pnpm must be installed BEFORE setup-node uses cache: pnpm.
+      # pnpm must be installed BEFORE setup-node because setup-node
+      # uses pnpm for its dependency cache.
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -127,33 +127,63 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # ffmpeg/ffprobe are intentionally not committed to Git.
+      # Download the correct FFmpeg/FFprobe binaries according to
+      # the Rust target triple.
+      #
+      # fetch-ffmpeg.mjs maps:
+      #   aarch64-apple-darwin      -> darwin-arm64
+      #   x86_64-apple-darwin       -> darwin-x64
+      #   x86_64-pc-windows-msvc    -> win32-x64
+      #   x86_64-unknown-linux-gnu  -> linux-x64
       - name: Download ffmpeg/ffprobe for this target
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/fetch-ffmpeg.mjs
 
+      # Create Tauri sidecar filenames:
+      #   ffmpeg-<target-triple>
+      #   ffprobe-<target-triple>
+      #
+      # IMPORTANT:
+      # TARGET_TRIPLE is passed explicitly so cross-compilation does
+      # not accidentally use the runner's host architecture.
       - name: Prepare ffmpeg/ffprobe sidecars
+        env:
+          TARGET_TRIPLE: ${{ matrix.target }}
         run: node scripts/prepare-ffmpeg.mjs
 
-      # Publish only release-producing matrix legs.
+      # Publish only the release-producing matrix legs.
       - name: Build and release
         if: matrix.publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Jadoo ${{ github.ref_name }}"
-          releaseBody: "Downloads neeche hain — apne OS/architecture ke hisaab se sahi file le lo."
+          releaseBody: |
+            Jadoo ${{ github.ref_name }}
+
+            Downloads:
+            - Windows 10/11 x64
+            - macOS Apple Silicon
+            - macOS Intel
+            - Ubuntu Linux
+
+            Choose the installer for your operating system and architecture.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
-      # Ubuntu 24/26 are validation-only.
+      # Ubuntu 24/26 are compiled for validation only.
+      # They do not upload duplicate Linux artifacts.
       - name: Build validation only
         if: ${{ !matrix.publish }}
         run: pnpm tauri build ${{ matrix.args }}
+```
