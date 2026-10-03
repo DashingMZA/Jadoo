@@ -1,9 +1,7 @@
-```yaml
 name: Release
 
-# Ek git tag jo "v" se shuru ho (jaise v1.0.1) push karne pe ye workflow
-# chalta hai — Windows/macOS app build karta hai aur GitHub Release (draft)
-# bana kar installers + updater artifacts attach karta hai.
+# Git tag jo "v" se shuru ho (jaise v1.0.1) push karne par
+# Windows/macOS builds aur GitHub Draft Release create hoti hai.
 #
 # Trigger:
 #   git tag v1.0.1
@@ -47,14 +45,14 @@ jobs:
         uses: actions/checkout@v4
 
       # package.json:
-      #   "packageManager": "pnpm@12.4.2"
+      # "packageManager": "pnpm@12.4.2"
       #
-      # Version yahan intentionally specify nahi ki gayi.
+      # Version intentionally yahan specify nahi ki gayi.
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      # pnpm ko setup-node se PEHLE install karna zaroori hai because
-      # setup-node ka pnpm cache pnpm executable use karta hai.
+      # pnpm ko setup-node se pehle install karna zaroori hai
+      # because setup-node ka pnpm cache pnpm executable use karta hai.
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -66,30 +64,35 @@ jobs:
           node --version
           pnpm --version
 
-      # Install the Rust target used by this matrix leg.
+      # Install Rust stable toolchain.
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
+
+      # Explicitly install the exact target required by this matrix leg.
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Verify Rust target
+        run: |
+          rustc --version
+          rustup target list --installed
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # Download the correct FFmpeg/FFprobe binaries according to
-      # the Rust target triple.
+      # Download FFmpeg/FFprobe according to the Rust target triple.
       #
-      # Current mappings:
-      #   aarch64-apple-darwin     -> darwin-arm64
-      #   x86_64-apple-darwin      -> darwin-x64
-      #   x86_64-pc-windows-msvc   -> win32-x64
+      # aarch64-apple-darwin -> darwin-arm64
+      # x86_64-apple-darwin  -> darwin-x64
+      # x86_64-pc-windows-msvc -> win32-x64
       - name: Download ffmpeg/ffprobe for this target
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/fetch-ffmpeg.mjs
 
-      # Plain ffmpeg/ffprobe ko Tauri sidecar naming convention ke
-      # mutabiq target-triple filename mein copy karta hai.
+      # Rename/copy the plain FFmpeg binaries using Tauri's
+      # target-triple sidecar naming convention.
       - name: Prepare ffmpeg/ffprobe sidecars
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
@@ -119,4 +122,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-```
