@@ -1,13 +1,20 @@
 name: Release
 
-# Ek git tag jo "v" se shuru ho (jaise v1.0.1) push karne pe ye workflow
-# chalta hai — Windows/macOS/Linux teeno pe app build karta hai aur ek
-# GitHub Release (draft) bana kar sab installers + updater artifacts
-# (latest.json) attach kar deta hai.
+# Release matrix:
+# - Windows x64 (Windows 10/11): x86_64-pc-windows-msvc
+# - Windows x86 (32-bit; Windows 10 only): i686-pc-windows-msvc
+# - macOS Apple Silicon: aarch64-apple-darwin
+# - macOS Intel: x86_64-apple-darwin
+# - Ubuntu 22.04 / 24.04 / 26.04: x86_64-unknown-linux-gnu
 #
-# Trigger karne ka tareeka:
-#   git tag v1.0.1
-#   git push origin v1.0.1
+# A Git tag beginning with "v" (for example v1.0.4) triggers the release.
+#
+# Ubuntu 22/24/26 are all built. Only Ubuntu 22 publishes the Linux release
+# artifact because all three use the same Linux target triple and therefore
+# produce the same Tauri artifact filenames. Ubuntu 24/26 are build validation
+# legs so the application is tested on all requested Ubuntu versions.
+#
+# Windows 11 is 64-bit/ARM64; the i686 build is intended for 32-bit Windows 10.
 
 on:
   push:
@@ -15,68 +22,114 @@ on:
       - "v*"
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   release:
     strategy:
       fail-fast: false
       matrix:
         include:
+          # macOS Apple Silicon
           - platform: "macos-latest"
             target: "aarch64-apple-darwin"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest"
+            publish: true
+
+          # macOS Intel
+          - platform: "macos-26-intel"
             target: "x86_64-apple-darwin"
             args: "--target x86_64-apple-darwin"
+            publish: true
+
+          # Ubuntu 22.04 - Linux release baseline
           - platform: "ubuntu-22.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
+            publish: true
+
+          # Ubuntu 24.04 - build validation
+          - platform: "ubuntu-24.04"
+            target: "x86_64-unknown-linux-gnu"
+            args: ""
+            publish: false
+
+          # Ubuntu 26.04 - build validation
+          - platform: "ubuntu-26.04"
+            target: "x86_64-unknown-linux-gnu"
+            args: ""
+            publish: false
+
+          # Windows 10/11 x64
           - platform: "windows-latest"
             target: "x86_64-pc-windows-msvc"
-            args: ""
+            args: "--target x86_64-pc-windows-msvc"
+            publish: true
+
+          # Windows 10 x86 (32-bit)
+          - platform: "windows-latest"
+            target: "i686-pc-windows-msvc"
+            args: "--target i686-pc-windows-msvc"
+            publish: true
 
     runs-on: ${{ matrix.platform }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: pnpm
 
+      # package.json is the single source of truth for the pnpm version.
+      # Keep "packageManager": "pnpm@12.4.2" in package.json.
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.target }}
 
       - name: Install Linux system dependencies
-        if: matrix.platform == 'ubuntu-22.04'
+        if: startsWith(matrix.platform, 'ubuntu-')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
-            patchelf build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev
+          sudo apt-get install -y             libwebkit2gtk-4.1-dev             build-essential             curl             wget             file             libssl-dev             libayatana-appindicator3-dev             librsvg2-dev             libxdo-dev             patchelf
+
+      - name: Install macOS build dependencies
+        if: startsWith(matrix.platform, 'macos-')
+        run: |
+          brew install llvm || true
+
+      - name: Install Windows target
+        if: startsWith(matrix.platform, 'windows-')
+        shell: pwsh
+        run: rustup target add $env:TARGET_TRIPLE
+        env:
+          TARGET_TRIPLE: ${{ matrix.target }}
 
       - name: Install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      # ffmpeg/ffprobe GIT mein commit NAHI hain (GitHub ka 100MB/file limit
-      # hai, ye files ~130MB each hain) — ye step khud, is matrix leg ke
-      # actual target (TARGET_TRIPLE) ke mutabiq, sahi binaries download kar
-      # leta hai. Verified source: descriptinc/ffmpeg-ffprobe-static.
+      # ffmpeg/ffprobe are intentionally not committed to Git.
+      # These scripts must provide binaries for every target in this matrix.
       - name: Download ffmpeg/ffprobe for this target
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/fetch-ffmpeg.mjs
 
-      # Ab plain-named files (ffmpeg.exe/ffmpeg) ko Tauri sidecar ke required
-      # naam (target-triple suffix wala) pe copy karo.
       - name: Prepare ffmpeg/ffprobe sidecars
         run: node scripts/prepare-ffmpeg.mjs
 
+      # Publish only the release-producing matrix legs.
       - name: Build and release
+        if: matrix.publish
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -85,7 +138,12 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Jadoo ${{ github.ref_name }}"
-          releaseBody: "Downloads neeche hain — apne OS ke hisaab se sahi file le lo."
+          releaseBody: "Downloads neeche hain — apne OS/architecture ke hisaab se sahi file le lo."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      # Ubuntu 24/26 are compiled but do not upload duplicate Linux artifacts.
+      - name: Build validation only
+        if: ${{ !matrix.publish }}
+        run: pnpm tauri build ${{ matrix.args }}

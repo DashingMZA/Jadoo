@@ -1,6 +1,6 @@
 {
   "name": "jadoo",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "private": true,
   "description": "Jadoo \u2014 batch video logo overlay desktop app (Tauri 2 + Next.js)",
   "author": "Zaheer Ahmad",
@@ -20,8 +20,8 @@
     "fetch:ffmpeg": "node scripts/fetch-ffmpeg.mjs",
     "prepare:ffmpeg": "node scripts/fetch-ffmpeg.mjs && node scripts/prepare-ffmpeg.mjs",
     "app:icon": "tauri icon",
-    "app:dev": "pnpm run prepare:ffmpeg && tauri dev",
-    "app:build": "pnpm run prepare:ffmpeg && tauri build"
+    "app:dev": "pnpm run prepare:ffmpeg && dotenv -e .env -- tauri dev",
+    "app:build": "pnpm run prepare:ffmpeg && dotenv -e .env -- tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1",
