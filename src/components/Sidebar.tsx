@@ -75,7 +75,8 @@ export function Sidebar() {
 
       <nav>
         {LINKS.map(({ href, icon: Icon, key }) => {
-          const isActive = href === "/" ? pathname === "/" : pathname?.startsWith(href);
+          const isActive =
+            href === "/" ? pathname === "/" : pathname?.startsWith(href);
           return (
             <Link
               key={href}
@@ -97,7 +98,11 @@ export function Sidebar() {
           // Collapsed mein jagah tang hoti hai — sirf abhi wale mode ka ek
           // icon dikhao; click karne se agla mode cycle ho jata hai.
           <div className="theme-toggle-row">
-            <button title={t(THEME_LABEL_KEY[preferences.themeMode])} className="active" onClick={cycleTheme}>
+            <button
+              title={t(THEME_LABEL_KEY[preferences.themeMode])}
+              className="active"
+              onClick={cycleTheme}
+            >
               <CurrentThemeIcon />
             </button>
           </div>
@@ -128,8 +133,18 @@ export function Sidebar() {
         )}
 
         <div className="status-row">
-          <span className={"status-dot" + (batchStatus === "running" ? " working" : "")} />
-          {!collapsed && <span>{batchStatus === "running" ? t("status.working") : t("status.stopped")}</span>}
+          <span
+            className={
+              "status-dot" + (batchStatus === "running" ? " working" : "")
+            }
+          />
+          {!collapsed && (
+            <span>
+              {batchStatus === "running"
+                ? t("status.working")
+                : t("status.stopped")}
+            </span>
+          )}
         </div>
 
         <button

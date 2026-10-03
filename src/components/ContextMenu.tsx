@@ -40,7 +40,11 @@ export function ContextMenu() {
     }
     function onDismiss(e: MouseEvent | KeyboardEvent) {
       if (e instanceof KeyboardEvent && e.key !== "Escape") return;
-      if (e instanceof MouseEvent && menuRef.current?.contains(e.target as Node)) return;
+      if (
+        e instanceof MouseEvent &&
+        menuRef.current?.contains(e.target as Node)
+      )
+        return;
       setPos(null);
     }
 

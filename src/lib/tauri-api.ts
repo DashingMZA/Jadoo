@@ -31,7 +31,9 @@ export async function pickFolder(defaultPath?: string): Promise<string | null> {
   return result ?? null;
 }
 
-export async function pickImageFile(defaultPath?: string): Promise<string | null> {
+export async function pickImageFile(
+  defaultPath?: string,
+): Promise<string | null> {
   const result = await openDialog({
     directory: false,
     multiple: false,
@@ -42,12 +44,19 @@ export async function pickImageFile(defaultPath?: string): Promise<string | null
   return result ?? null;
 }
 
-export async function pickVideoFile(defaultPath?: string): Promise<string | null> {
+export async function pickVideoFile(
+  defaultPath?: string,
+): Promise<string | null> {
   const result = await openDialog({
     directory: false,
     multiple: false,
     defaultPath,
-    filters: [{ name: "Video", extensions: ["mp4", "mov", "mkv", "avi", "m4v", "webm"] }],
+    filters: [
+      {
+        name: "Video",
+        extensions: ["mp4", "mov", "mkv", "avi", "m4v", "webm"],
+      },
+    ],
   });
   if (Array.isArray(result)) return result[0] ?? null;
   return result ?? null;
@@ -90,7 +99,10 @@ export function saveBatchSettings(settings: BatchSettings): Promise<void> {
  *  (isliye naye resolutions add karne ke liye har baar naya sample video nahi
  *  chahiye). Frontend ise `convertFileSrc()` se ek playable `<video src>` bana
  *  leta hai. */
-export function getDefaultVideoPath(resolutionLabel: string, aspectRatio: string): Promise<string> {
+export function getDefaultVideoPath(
+  resolutionLabel: string,
+  aspectRatio: string,
+): Promise<string> {
   return invoke("get_default_video_path", { resolutionLabel, aspectRatio });
 }
 
@@ -104,13 +116,18 @@ export interface StartBatchArgs {
 }
 
 export function startBatch(args: StartBatchArgs): Promise<void> {
-  return invoke("start_batch", { settings: args.settings, profile: args.profile });
+  return invoke("start_batch", {
+    settings: args.settings,
+    profile: args.profile,
+  });
 }
 
 export function onBatchProgress(
   callback: (event: BatchProgressEvent) => void,
 ): Promise<UnlistenFn> {
-  return listen<BatchProgressEvent>("batch-progress", (e) => callback(e.payload));
+  return listen<BatchProgressEvent>("batch-progress", (e) =>
+    callback(e.payload),
+  );
 }
 
 // ---------------------------------------------------------------------------

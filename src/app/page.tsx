@@ -102,7 +102,11 @@ export default function HomePage() {
 
   // settings.logoPath ko override ke sath sync rakho (batch isi se run hoti hai)
   useEffect(() => {
-    setSettings((s) => (s.logoPath === logoPathOverride ? s : { ...s, logoPath: logoPathOverride }));
+    setSettings((s) =>
+      s.logoPath === logoPathOverride
+        ? s
+        : { ...s, logoPath: logoPathOverride },
+    );
   }, [logoPathOverride]);
 
   const effectiveProfile: LogoProfile | null = activeProfile
@@ -122,11 +126,15 @@ export default function HomePage() {
               <input
                 type="text"
                 value={settings.projectName}
-                onChange={(e) => setSettings((s) => ({ ...s, projectName: e.target.value }))}
+                onChange={(e) =>
+                  setSettings((s) => ({ ...s, projectName: e.target.value }))
+                }
                 placeholder={t("home.projectNamePlaceholder")}
               />
               <p className="hint">
-                {t("home.outputFilesHint", { name: settings.projectName || "ProjectName" })}
+                {t("home.outputFilesHint", {
+                  name: settings.projectName || "ProjectName",
+                })}
               </p>
             </div>
 
@@ -148,7 +156,10 @@ export default function HomePage() {
               <select
                 value={settings.activeProfileId ?? ""}
                 onChange={(e) =>
-                  setSettings((s) => ({ ...s, activeProfileId: e.target.value || null }))
+                  setSettings((s) => ({
+                    ...s,
+                    activeProfileId: e.target.value || null,
+                  }))
                 }
               >
                 <option value="">{t("home.selectProfilePlaceholder")}</option>
@@ -158,7 +169,9 @@ export default function HomePage() {
                   </option>
                 ))}
               </select>
-              {profiles.length === 0 && <p className="hint">{t("home.noProfilesHint")}</p>}
+              {profiles.length === 0 && (
+                <p className="hint">{t("home.noProfilesHint")}</p>
+              )}
             </div>
 
             {activeProfile && (
@@ -177,10 +190,14 @@ export default function HomePage() {
                     max={1}
                     step={0.05}
                     value={opacityOverride}
-                    onChange={(e) => setOpacityOverride(parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      setOpacityOverride(parseFloat(e.target.value))
+                    }
                   />
                   <p className="hint">
-                    {t("home.opaquePercent", { pct: Math.round(opacityOverride * 100) })}
+                    {t("home.opaquePercent", {
+                      pct: Math.round(opacityOverride * 100),
+                    })}
                   </p>
                 </div>
               </>
@@ -192,7 +209,10 @@ export default function HomePage() {
                 <select
                   value={settings.quality}
                   onChange={(e) =>
-                    setSettings((s) => ({ ...s, quality: e.target.value as QualityPreset }))
+                    setSettings((s) => ({
+                      ...s,
+                      quality: e.target.value as QualityPreset,
+                    }))
                   }
                 >
                   {Object.entries(QUALITY_KEYS).map(([k, key]) => (
@@ -207,7 +227,10 @@ export default function HomePage() {
                 <select
                   value={settings.audioMode}
                   onChange={(e) =>
-                    setSettings((s) => ({ ...s, audioMode: e.target.value as AudioMode }))
+                    setSettings((s) => ({
+                      ...s,
+                      audioMode: e.target.value as AudioMode,
+                    }))
                   }
                 >
                   {Object.entries(AUDIO_KEYS).map(([k, key]) => (
@@ -228,7 +251,10 @@ export default function HomePage() {
             <strong>{t("home.previewTitle")}</strong>
             <p className="hint" style={{ marginBottom: 10 }}>
               {activeProfile
-                ? t("home.previewHint", { res: activeProfile.resolutionLabel, name: activeProfile.name })
+                ? t("home.previewHint", {
+                    res: activeProfile.resolutionLabel,
+                    name: activeProfile.name,
+                  })
                 : t("home.previewSelectProfileFirst")}
             </p>
 

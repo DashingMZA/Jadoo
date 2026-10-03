@@ -2,19 +2,12 @@ name: Release
 
 # Release matrix:
 # - Windows x64 (Windows 10/11): x86_64-pc-windows-msvc
-# - Windows x86 (32-bit; Windows 10 only): i686-pc-windows-msvc
+# - Windows x86 (32-bit; Windows 10): i686-pc-windows-msvc
 # - macOS Apple Silicon: aarch64-apple-darwin
 # - macOS Intel: x86_64-apple-darwin
 # - Ubuntu 22.04 / 24.04 / 26.04: x86_64-unknown-linux-gnu
 #
-# A Git tag beginning with "v" (for example v1.0.4) triggers the release.
-#
-# Ubuntu 22/24/26 are all built. Only Ubuntu 22 publishes the Linux release
-# artifact because all three use the same Linux target triple and therefore
-# produce the same Tauri artifact filenames. Ubuntu 24/26 are build validation
-# legs so the application is tested on all requested Ubuntu versions.
-#
-# Windows 11 is 64-bit/ARM64; the i686 build is intended for 32-bit Windows 10.
+# A Git tag beginning with "v" triggers the release.
 
 on:
   push:
@@ -43,19 +36,19 @@ jobs:
             args: "--target x86_64-apple-darwin"
             publish: true
 
-          # Ubuntu 22.04 - Linux release baseline
+          # Ubuntu 22.04 - Linux release
           - platform: "ubuntu-22.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
             publish: true
 
-          # Ubuntu 24.04 - build validation
+          # Ubuntu 24.04 - validation
           - platform: "ubuntu-24.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
             publish: false
 
-          # Ubuntu 26.04 - build validation
+          # Ubuntu 26.04 - validation
           - platform: "ubuntu-26.04"
             target: "x86_64-unknown-linux-gnu"
             args: ""
@@ -67,7 +60,7 @@ jobs:
             args: "--target x86_64-pc-windows-msvc"
             publish: true
 
-          # Windows 10 x86 (32-bit)
+          # Windows 10 x86 / 32-bit
           - platform: "windows-latest"
             target: "i686-pc-windows-msvc"
             args: "--target i686-pc-windows-msvc"
@@ -79,16 +72,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # IMPORTANT:
+      # pnpm must be installed BEFORE setup-node uses cache: pnpm.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.2
+          run_install: false
+
       - name: Install Node
         uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
 
-      # package.json is the single source of truth for the pnpm version.
-      # Keep "packageManager": "pnpm@12.4.2" in package.json.
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Verify Node and pnpm
+        run: |
+          node --version
+          pnpm --version
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -99,7 +100,17 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu-')
         run: |
           sudo apt-get update
-          sudo apt-get install -y             libwebkit2gtk-4.1-dev             build-essential             curl             wget             file             libssl-dev             libayatana-appindicator3-dev             librsvg2-dev             libxdo-dev             patchelf
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            patchelf
 
       - name: Install macOS build dependencies
         if: startsWith(matrix.platform, 'macos-')
@@ -117,7 +128,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # ffmpeg/ffprobe are intentionally not committed to Git.
-      # These scripts must provide binaries for every target in this matrix.
       - name: Download ffmpeg/ffprobe for this target
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
@@ -127,7 +137,7 @@ jobs:
       - name: Prepare ffmpeg/ffprobe sidecars
         run: node scripts/prepare-ffmpeg.mjs
 
-      # Publish only the release-producing matrix legs.
+      # Publish only release-producing matrix legs.
       - name: Build and release
         if: matrix.publish
         uses: tauri-apps/tauri-action@v0
@@ -143,7 +153,7 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
-      # Ubuntu 24/26 are compiled but do not upload duplicate Linux artifacts.
+      # Ubuntu 24/26 are validation-only.
       - name: Build validation only
         if: ${{ !matrix.publish }}
         run: pnpm tauri build ${{ matrix.args }}

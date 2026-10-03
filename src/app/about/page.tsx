@@ -19,7 +19,9 @@ export default function AboutPage() {
   const [readyToRestart, setReadyToRestart] = useState(false);
 
   useEffect(() => {
-    getAppInfo().then(setAppInfo).catch(() => {});
+    getAppInfo()
+      .then(setAppInfo)
+      .catch(() => {});
   }, []);
 
   async function handleCheckUpdate() {
@@ -28,7 +30,9 @@ export default function AboutPage() {
     try {
       const update = await checkForUpdate();
       if (update?.available) {
-        setUpdateStatus(t("about.updateAvailable", { version: update.version }));
+        setUpdateStatus(
+          t("about.updateAvailable", { version: update.version }),
+        );
         await update.downloadAndInstall();
         setUpdateStatus(t("about.updateInstalled"));
         setReadyToRestart(true);
@@ -66,7 +70,11 @@ export default function AboutPage() {
         </button>
         {updateStatus && <p className="hint">{updateStatus}</p>}
         {readyToRestart && (
-          <button className="primary" style={{ marginTop: 8 }} onClick={() => relaunch()}>
+          <button
+            className="primary"
+            style={{ marginTop: 8 }}
+            onClick={() => relaunch()}
+          >
             {t("about.restartNow")}
           </button>
         )}

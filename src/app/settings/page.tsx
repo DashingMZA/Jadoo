@@ -10,11 +10,16 @@ import type { TranslationKey } from "@/locales";
 
 export default function SettingsPage() {
   const { t, preferences, setLanguage, setAccentColor } = useAppContext();
-  const [autostartEnabled, setAutostartEnabled] = useState<boolean | null>(null);
+  const [autostartEnabled, setAutostartEnabled] = useState<boolean | null>(
+    null,
+  );
   const [platform, setPlatform] = useState<string>("");
 
   useEffect(() => {
-    autostart.isEnabled().then(setAutostartEnabled).catch(() => setAutostartEnabled(null));
+    autostart
+      .isEnabled()
+      .then(setAutostartEnabled)
+      .catch(() => setAutostartEnabled(null));
     getAppInfo()
       .then((info) => setPlatform(info.platform))
       .catch(() => {});
@@ -55,14 +60,19 @@ export default function SettingsPage() {
 
       <div className="card">
         <strong>{t("settings.accentColor")}</strong>
-        <p className="hint" style={{ marginBottom: 12 }}>{t("settings.accentColorSubtitle")}</p>
+        <p className="hint" style={{ marginBottom: 12 }}>
+          {t("settings.accentColorSubtitle")}
+        </p>
         <div className="color-swatch-row">
           {ACCENT_COLORS.map((c) => (
             <button
               key={c.value}
               type="button"
               title={t(c.key as TranslationKey)}
-              className={"color-swatch" + (preferences.accentColor === c.value ? " selected" : "")}
+              className={
+                "color-swatch" +
+                (preferences.accentColor === c.value ? " selected" : "")
+              }
               style={{ background: c.value }}
               onClick={() => setAccentColor(c.value)}
             />
@@ -72,7 +82,9 @@ export default function SettingsPage() {
 
       <div className="card">
         <strong>{t("settings.startup")}</strong>
-        <p className="hint" style={{ marginBottom: 10 }}>{t("settings.startupHint")}</p>
+        <p className="hint" style={{ marginBottom: 10 }}>
+          {t("settings.startupHint")}
+        </p>
         <p className="hint" style={{ marginBottom: 10 }}>
           {platform === "macos"
             ? t("settings.startupMac")

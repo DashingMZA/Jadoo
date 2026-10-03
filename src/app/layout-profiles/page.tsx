@@ -12,7 +12,11 @@ import {
   pickVideoFile,
   saveProfile,
 } from "@/lib/tauri-api";
-import { COMMON_RESOLUTIONS, RESOLUTION_GROUPS, getAspectForResolution } from "@/lib/resolutions";
+import {
+  COMMON_RESOLUTIONS,
+  RESOLUTION_GROUPS,
+  getAspectForResolution,
+} from "@/lib/resolutions";
 import type { LogoProfile } from "@/lib/types";
 
 function blankProfile(): LogoProfile {
@@ -51,7 +55,11 @@ export default function LayoutProfilesPage() {
   useEffect(() => {
     if (previewIsCustom) return;
     let cancelled = false;
-    const aspect = getAspectForResolution(draft.resolutionLabel, draft.refWidth, draft.refHeight);
+    const aspect = getAspectForResolution(
+      draft.resolutionLabel,
+      draft.refWidth,
+      draft.refHeight,
+    );
     getDefaultVideoPath(draft.resolutionLabel, aspect ?? "")
       .then((path) => {
         if (!cancelled) setPreviewVideoSrc(convertFileSrc(path));
@@ -78,7 +86,12 @@ export default function LayoutProfilesPage() {
   function applyResolution(label: string) {
     const res = COMMON_RESOLUTIONS.find((r) => r.label === label);
     if (!res) return;
-    setDraft((d) => ({ ...d, resolutionLabel: res.label, refWidth: res.width, refHeight: res.height }));
+    setDraft((d) => ({
+      ...d,
+      resolutionLabel: res.label,
+      refWidth: res.width,
+      refHeight: res.height,
+    }));
   }
 
   async function loadCustomPreviewVideo() {
@@ -95,7 +108,10 @@ export default function LayoutProfilesPage() {
     }
     setSaving(true);
     try {
-      const updated = await saveProfile({ ...draft, updatedAt: new Date().toISOString() });
+      const updated = await saveProfile({
+        ...draft,
+        updatedAt: new Date().toISOString(),
+      });
       setProfiles(updated);
     } finally {
       setSaving(false);
@@ -122,13 +138,21 @@ export default function LayoutProfilesPage() {
       <div className="grid-2">
         <div>
           <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 10,
+              }}
+            >
               <strong>{t("layoutProfiles.savedProfiles")}</strong>
               <button type="button" onClick={newProfile}>
                 {t("layoutProfiles.newProfile")}
               </button>
             </div>
-            {profiles.length === 0 && <p className="hint">{t("layoutProfiles.noProfilesSaved")}</p>}
+            {profiles.length === 0 && (
+              <p className="hint">{t("layoutProfiles.noProfilesSaved")}</p>
+            )}
             {profiles.map((p) => (
               <div
                 key={p.id}
@@ -159,21 +183,33 @@ export default function LayoutProfilesPage() {
               <input
                 type="text"
                 value={draft.name}
-                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, name: e.target.value }))
+                }
                 placeholder={t("layoutProfiles.profileNamePlaceholder")}
               />
             </div>
 
             <div className="field">
               <label>{t("layoutProfiles.screenSize")}</label>
-              <select value={draft.resolutionLabel} onChange={(e) => applyResolution(e.target.value)}>
+              <select
+                value={draft.resolutionLabel}
+                onChange={(e) => applyResolution(e.target.value)}
+              >
                 {RESOLUTION_GROUPS.map((group) => (
-                  <optgroup key={group} label={group === "General" ? t("resolutionGroup.general") : group}>
-                    {COMMON_RESOLUTIONS.filter((r) => r.group === group).map((r) => (
-                      <option key={r.label} value={r.label}>
-                        {r.label}
-                      </option>
-                    ))}
+                  <optgroup
+                    key={group}
+                    label={
+                      group === "General" ? t("resolutionGroup.general") : group
+                    }
+                  >
+                    {COMMON_RESOLUTIONS.filter((r) => r.group === group).map(
+                      (r) => (
+                        <option key={r.label} value={r.label}>
+                          {r.label}
+                        </option>
+                      ),
+                    )}
                   </optgroup>
                 ))}
               </select>
@@ -186,7 +222,10 @@ export default function LayoutProfilesPage() {
                   type="number"
                   value={draft.refWidth}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, refWidth: parseInt(e.target.value, 10) || d.refWidth }))
+                    setDraft((d) => ({
+                      ...d,
+                      refWidth: parseInt(e.target.value, 10) || d.refWidth,
+                    }))
                   }
                 />
               </div>
@@ -196,7 +235,10 @@ export default function LayoutProfilesPage() {
                   type="number"
                   value={draft.refHeight}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, refHeight: parseInt(e.target.value, 10) || d.refHeight }))
+                    setDraft((d) => ({
+                      ...d,
+                      refHeight: parseInt(e.target.value, 10) || d.refHeight,
+                    }))
                   }
                 />
               </div>
@@ -210,7 +252,11 @@ export default function LayoutProfilesPage() {
             />
 
             <div className="field">
-              <label>{t("layoutProfiles.logoSize", { pct: Math.round(draft.logoWidthPercent * 100) })}</label>
+              <label>
+                {t("layoutProfiles.logoSize", {
+                  pct: Math.round(draft.logoWidthPercent * 100),
+                })}
+              </label>
               <input
                 type="range"
                 min={0.01}
@@ -218,29 +264,49 @@ export default function LayoutProfilesPage() {
                 step={0.01}
                 value={draft.logoWidthPercent}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, logoWidthPercent: parseFloat(e.target.value) }))
+                  setDraft((d) => ({
+                    ...d,
+                    logoWidthPercent: parseFloat(e.target.value),
+                  }))
                 }
               />
               <p className="hint">{t("layoutProfiles.logoSizeHint")}</p>
             </div>
 
             <div className="field">
-              <label>{t("layoutProfiles.transparency", { pct: Math.round(draft.opacity * 100) })}</label>
+              <label>
+                {t("layoutProfiles.transparency", {
+                  pct: Math.round(draft.opacity * 100),
+                })}
+              </label>
               <input
                 type="range"
                 min={0.1}
                 max={1}
                 step={0.05}
                 value={draft.opacity}
-                onChange={(e) => setDraft((d) => ({ ...d, opacity: parseFloat(e.target.value) }))}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    opacity: parseFloat(e.target.value),
+                  }))
+                }
               />
             </div>
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="primary" onClick={handleSave} disabled={saving}>
-                {saving ? t("layoutProfiles.saving") : t("layoutProfiles.saveProfile")}
+              <button
+                className="primary"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving
+                  ? t("layoutProfiles.saving")
+                  : t("layoutProfiles.saveProfile")}
               </button>
-              <button onClick={handleSaveAsNew}>{t("layoutProfiles.saveAsNew")}</button>
+              <button onClick={handleSaveAsNew}>
+                {t("layoutProfiles.saveAsNew")}
+              </button>
             </div>
           </div>
         </div>
@@ -249,7 +315,10 @@ export default function LayoutProfilesPage() {
           <div className="card">
             <strong>{t("layoutProfiles.positionPreview")}</strong>
             <p className="hint" style={{ marginBottom: 10 }}>
-              {t("layoutProfiles.positionPreviewHint", { w: draft.refWidth, h: draft.refHeight })}
+              {t("layoutProfiles.positionPreviewHint", {
+                w: draft.refWidth,
+                h: draft.refHeight,
+              })}
             </p>
             <LogoPositionPicker
               refWidth={draft.refWidth}
@@ -264,7 +333,11 @@ export default function LayoutProfilesPage() {
                 setDraft((d) => ({ ...d, posXPercent: x, posYPercent: y }))
               }
             />
-            <button type="button" onClick={loadCustomPreviewVideo} style={{ marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={loadCustomPreviewVideo}
+              style={{ marginTop: 10 }}
+            >
               {t("layoutProfiles.pickOwnVideo")}
             </button>
           </div>

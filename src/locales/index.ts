@@ -23,7 +23,11 @@ export const LOCALES = [
 ] as const;
 
 export type Language = (typeof LOCALES)[number]["code"];
-export type LocaleOption = { code: Language; label: string; dir: "ltr" | "rtl" };
+export type LocaleOption = {
+  code: Language;
+  label: string;
+  dir: "ltr" | "rtl";
+};
 
 // Translation keys `en.json` se derive hote hain (single source of truth).
 export type TranslationKey = keyof typeof en;
