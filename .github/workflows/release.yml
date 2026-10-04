@@ -1,11 +1,13 @@
 name: Release
 
-# Git tag jo "v" se shuru ho (jaise v1.0.1) push karne par
-# Windows/macOS builds aur GitHub Draft Release create hoti hai.
+# Ek git tag jo "v" se shuru ho (jaise v1.0.1) push karne pe ye workflow
+# chalta hai — Windows/macOS/Linux build karta hai aur ek GitHub Release
+# (draft) bana kar sab installers + updater artifacts (latest.json) attach
+# kar deta hai.
 #
-# Trigger:
-#   git tag v1.0.7
-#   git push origin v1.0.7
+# Trigger karne ka tareeka:
+#   git tag v1.0.1
+#   git push origin v1.0.1
 
 on:
   push:
@@ -13,6 +15,8 @@ on:
       - "v*"
   workflow_dispatch: {}
 
+# Release create/upload karne ke liye zaroori hai, warna tauri-action
+# "Resource not accessible by integration" jaisi permission error de sakta hai.
 permissions:
   contents: write
 
@@ -20,39 +24,35 @@ jobs:
   release:
     strategy:
       fail-fast: false
-
       matrix:
         include:
-          # macOS Apple Silicon
           - platform: "macos-latest"
             target: "aarch64-apple-darwin"
             args: "--target aarch64-apple-darwin"
-
-          # macOS Intel
-          - platform: "macos-26"
+          - platform: "macos-latest"
             target: "x86_64-apple-darwin"
             args: "--target x86_64-apple-darwin"
-
-          # Windows 10/11 x64
+          - platform: "ubuntu-22.04"
+            target: "x86_64-unknown-linux-gnu"
+            args: ""
           - platform: "windows-latest"
             target: "x86_64-pc-windows-msvc"
-            args: "--target x86_64-pc-windows-msvc"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # package.json:
-      # "packageManager": "pnpm@12.4.2"
-      #
-      # Version intentionally yahan specify nahi ki gayi.
+      # pnpm, setup-node se PEHLE install karna zaroori hai — setup-node ka
+      # pnpm cache option (niche) pnpm executable ko already-available dhoondta
+      # hai.
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        # Version yahan nahi deni — package.json ka "packageManager": "pnpm@12.4.2"
+        # field khud version pin karta hai; dono jagah dena conflict error deta hai
+        # ("Multiple versions of pnpm specified").
 
-      # pnpm ko setup-node se pehle install karna zaroori hai
-      # because setup-node ka pnpm cache pnpm executable use karta hai.
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -64,11 +64,12 @@ jobs:
           node --version
           pnpm --version
 
-      # Install Rust stable toolchain.
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # Explicitly install the exact target required by this matrix leg.
+      # Is matrix leg ka EXACT target install karo (zaroori hai — warna
+      # macOS Intel cross-compile leg Apple-Silicon runner pe fail hoti hai,
+      # kyunke cargo ke paas wo target hi installed nahi hota).
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
@@ -77,22 +78,29 @@ jobs:
           rustc --version
           rustup target list --installed
 
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
+            patchelf build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev
+
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      # Download FFmpeg/FFprobe according to the Rust target triple.
-      #
-      # aarch64-apple-darwin -> darwin-arm64
-      # x86_64-apple-darwin  -> darwin-x64
-      # x86_64-pc-windows-msvc -> win32-x64
+      # ffmpeg/ffprobe GIT mein commit NAHI hain (GitHub ka 100MB/file limit
+      # hai, ye files ~130MB each hain) — ye step khud, is matrix leg ke
+      # actual target (TARGET_TRIPLE) ke mutabiq, sahi binaries download kar
+      # leta hai. Verified source: descriptinc/ffmpeg-ffprobe-static.
       - name: Download ffmpeg/ffprobe for this target
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/fetch-ffmpeg.mjs
 
-      # Rename/copy the plain FFmpeg binaries using Tauri's
-      # target-triple sidecar naming convention.
+      # Ab plain-named files (ffmpeg.exe/ffmpeg) ko Tauri sidecar ke required
+      # naam (target-triple suffix wala) pe copy karo. TARGET_TRIPLE yahan
+      # bhi zaroori hai (same cross-compile reason jaisa upar).
       - name: Prepare ffmpeg/ffprobe sidecars
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
@@ -102,23 +110,12 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Jadoo ${{ github.ref_name }}"
-          releaseBody: |
-            Jadoo ${{ github.ref_name }}
-
-            Downloads:
-            - Windows 10/11 x64
-            - macOS Apple Silicon
-            - macOS Intel
-
-            Choose the installer for your operating system and architecture.
+          releaseBody: "Downloads neeche hain — apne OS ke hisaab se sahi file le lo."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
