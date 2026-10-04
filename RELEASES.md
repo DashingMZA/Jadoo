@@ -5,6 +5,16 @@ banata hai, aur files GitHub Releases se serve hoti hain** — aapki apni
 website (jadoo.bond) sirf ek download button dikhati hai jo GitHub ke actual
 file URL par point karta hai. Koi alag server/hosting/bandwidth cost nahi.
 
+## ⚠️ Identifier badal gaya hai (`bond.jadoo.app` → `com.csofts.jadoo`)
+
+Agar aapke test machine pe purane identifier (`bond.jadoo.app`) wali Jadoo
+pehle se installed hai, usse pehle **Settings -> Apps se uninstall** kar lena.
+Naya identifier Windows/macOS ke liye ek bilkul alag app jaisa hota hai —
+purani install khud-ba-khud upgrade/replace nahi hogi (alag registry
+entry, alag install folder, alag saved-settings location), aur dono sath
+install ho sakti hain jab tak purani ko khud na hatao. Ye sirf is ek dafa
+ke liye hai — ab identifier wahi (`com.csofts.jadoo`) permanently use hoga.
+
 ## ⚠️ Pehle apna abhi wala push fix karo
 
 Aapne jo kiya usme 2 cheezein atki hain:
