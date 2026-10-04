@@ -7,13 +7,7 @@
 /gen/schemas
 
 
-# Sample Videos
-sample-videos/1-1-square-1080x1080-feed-post.mp4
-sample-videos/4-5-portrait-1080x1350-instagram-feed.mp4
-sample-videos/9-16-vertical-720x1280.mp4
-sample-videos/9-16-vertical-1080x1920-reels-shorts-tiktok.mp4
-sample-videos/16-9-horizontal-1280x720.mp4
-sample-videos/16-9-horizontal-1920x1080-youtube.mp4
-sample-videos/README.md
+# Sample Videos folder
+/sample-videos/
 
 
