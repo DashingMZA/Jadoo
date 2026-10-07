@@ -148,6 +148,11 @@ export function saveAppPreferences(preferences: AppPreferences): Promise<void> {
   return invoke("save_app_preferences", { preferences });
 }
 
+/** Tray menu ("Open Jadoo"/"Quit") ka text turant naya language mein update karta hai. */
+export function updateTrayLanguage(language: string): Promise<void> {
+  return invoke("update_tray_language", { language });
+}
+
 // ---------------------------------------------------------------------------
 // History
 // ---------------------------------------------------------------------------

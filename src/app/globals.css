@@ -94,9 +94,25 @@ a {
   overflow: hidden;
 }
 
+.sidebar-brand .brand-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .sidebar-brand .brand-name {
   font-weight: 700;
   font-size: 15px;
+  white-space: nowrap;
+}
+
+.sidebar-brand .brand-version {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 6px;
   white-space: nowrap;
 }
 
@@ -441,6 +457,91 @@ button:disabled {
 .color-swatch.selected {
   border-color: var(--text);
   box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 4px var(--accent);
+}
+
+/* About -> Social tab */
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.social-pill {
+  min-height: 76px;
+  border: 1px solid color-mix(in srgb, var(--social-color, var(--primary)) 20%, var(--border));
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--social-color, var(--primary)) 5%, transparent),
+    var(--bg1)
+  );
+  color: var(--text);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.social-pill:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--social-color, var(--primary)) 8%, transparent),
+    var(--bg1)
+  );
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--social-color, var(--primary)) 40%, var(--border));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--social-color, var(--primary)) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+/* Toast notifications (update-available, batch start/end) */
+.toast-stack {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+  max-width: 340px;
+}
+
+.toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.toast-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: var(--text);
+}
+
+.toast-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* History page */

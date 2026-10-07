@@ -2,8 +2,38 @@ mod commands;
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{Manager, WindowEvent};
+use tauri::{Manager, State, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
+
+/// Tray menu strings, har supported language ke liye (frontend ke
+/// `src/locales/*.json` se alag rakhi hain kyunke Rust side JSON files ko
+/// import nahi kar sakta bina extra build-step ke — sirf 2 chhote strings
+/// hain isliye yahan direct embed kar diya).
+fn tray_text(language: &str) -> (&'static str, &'static str) {
+    match language {
+        "ur" => ("جادو کھولیں", "باہر نکلیں"),
+        "hi" => ("जादू खोलें", "बाहर निकलें"),
+        "ar" => ("افتح جادو", "إنهاء"),
+        "de" => ("Jadoo öffnen", "Beenden"),
+        _ => ("Open Jadoo", "Quit"),
+    }
+}
+
+struct TrayMenuItems {
+    show: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+
+/// Frontend language badalte hi ye call karta hai (preferences save karne ke
+/// sath sath) — taake tray menu ka text turant, bina app restart kiye, nayi
+/// language mein update ho jaye.
+#[tauri::command]
+fn update_tray_language(state: State<TrayMenuItems>, language: String) -> Result<(), String> {
+    let (show_text, quit_text) = tray_text(&language);
+    state.show.set_text(show_text).map_err(|e| e.to_string())?;
+    state.quit.set_text(quit_text).map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -49,8 +79,18 @@ pub fn run() {
             commands::profiles::get_app_info,
             commands::ffmpeg::get_default_video_path,
             commands::ffmpeg::start_batch,
+            update_tray_language,
         ])
         .setup(|app| {
+            // ---- Database (SQLite) --------------------------------------------
+            // Sab kuch (profiles, settings, preferences, history) ab yahan store
+            // hota hai — plain JSON files ki jagah, taake koi text-editor se
+            // manually edit na kar sake. Pehli baar chalne pe agar purani
+            // *.json files mili to unka data khud-ba-khud DB mein copy ho jata
+            // hai (dekho commands/db.rs::migrate_from_json_if_needed).
+            let db = commands::db::init(&app.handle())?;
+            app.manage(db);
+
             // ---- macOS: dock/cmd-tab se hata do, sirf menu-bar (tray) app jaisa
             // behave kare — Windows pe iski zaroorat nahi (taskbar icon hide()
             // karte hi khud gayab ho jata hai).
@@ -58,9 +98,26 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             // ---- System tray -------------------------------------------------
-            let show_item = MenuItem::with_id(app, "show", "Jadoo Kholo", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            // Pehli baar tray banate waqt saved language preference use karo
+            // (agar koi save hui ho) — taake tray pehle hi sahi language mein
+            // khule, "English" dikha ke phir badalne ki bajaye.
+            let initial_language =
+                commands::profiles::get_app_preferences(app.state::<commands::db::Db>())
+                    .map(|p| p.language)
+                    .unwrap_or_else(|_| "en".to_string());
+            let (show_text, quit_text) = tray_text(&initial_language);
+
+            let show_item = MenuItem::with_id(app, "show", show_text, true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", quit_text, true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            // Baad mein language badalne pe in handles ko dobara use karna hai
+            // (`update_tray_language` command) — isliye managed state mein
+            // clones rakh dete hain.
+            app.manage(TrayMenuItems {
+                show: show_item.clone(),
+                quit: quit_item.clone(),
+            });
 
             let tray_builder = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())

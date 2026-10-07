@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sidebar } from "@/components/Sidebar";
 import { ContextMenu } from "@/components/ContextMenu";
 import { AppProviders } from "@/context/AppContext";
+import { ToastProvider } from "@/context/ToastContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,13 +14,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <AppProviders>
-          <div className="app-shell">
-            <Sidebar />
-            <main className="main-content">{children}</main>
-          </div>
-          <ContextMenu />
-        </AppProviders>
+        <ToastProvider>
+          <AppProviders>
+            <div className="app-shell">
+              <Sidebar />
+              <main className="main-content">{children}</main>
+            </div>
+            <ContextMenu />
+          </AppProviders>
+        </ToastProvider>
       </body>
     </html>
   );

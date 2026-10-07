@@ -83,7 +83,8 @@ page ka "Check for Updates" button gracefully "not configured" message dega.
 | Logo drag-position picker | `src/components/LogoPositionPicker.tsx` |
 | Batch trigger + live progress | `src/components/BatchRunner.tsx` |
 | Overlay/ffmpeg logic + sample-video resolution (Rust) | `src-tauri/src/commands/ffmpeg.rs` |
-| Profiles/settings/preferences/history persistence (Rust) | `src-tauri/src/commands/profiles.rs` |
+| Profiles/settings/preferences/history — Tauri commands (Rust) | `src-tauri/src/commands/profiles.rs` |
+| SQLite database — schema, queries, JSON-file migration (Rust) | `src-tauri/src/commands/db.rs` |
 | Tray / close-to-tray / autostart / single-instance | `src-tauri/src/lib.rs` |
 | Main config (name/version/identifier/port) | `src-tauri/tauri.conf.json` |
 | Sample/default preview videos config | `src-tauri/sample-videos.json`, `src-tauri/sample-videos/` |
@@ -106,6 +107,21 @@ Koi sample configure na ho to preview khali (placeholder) dikhega — batch
 processing par isse koi asar nahi padta.
 
 ## Naye features (latest update)
+
+- **Storage ab JSON files nahi, SQLite database hai**
+  (`app_config_dir()/jadoo.db`) — profiles, settings, preferences, history
+  sab isi mein. Plain text file ki tarah kisi editor se khol ke manually
+  change nahi ki ja sakti (SQLite ek binary database format hai). Pehli baar
+  naye version pe chalne par, agar purani `*.json` files mili to unka data
+  khud-ba-khud DB mein copy ho jata hai (purani files delete nahi hoti,
+  `.migrated` suffix lag ke safe rehti hain).
+- **Tray menu translated** — "Open Jadoo"/"Quit" ab app ki language mein
+  (5 languages), aur language badalte hi turant update ho jata hai.
+- **Sidebar mein version number** (jaisa screenshot mein tha).
+- **Update-available aur batch start/end ke liye toast notifications.**
+- **About page 3 tabs mein**: App / Social / Contact (aapke `social.ts`/
+  `contact.ts` se).
+
 
 - **Window size fix:** `tauri.conf.json` mein aapke diye gaye window
   changes merge kar diye (height 910, minWidth 1000, minHeight 910,

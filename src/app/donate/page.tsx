@@ -87,11 +87,11 @@ export default function DonatePage() {
               </button>
             </div>
           ))}
-          <p className="hint" style={{ marginTop: 12, textAlign: "center" }}>
-            {t("donate.thankYou")}
-          </p>
         </div>
       )}
+      <p className="hint" style={{ marginTop: 12, textAlign: "center" }}>
+            {t("donate.thankYou")}
+          </p>
     </div>
   );
 }

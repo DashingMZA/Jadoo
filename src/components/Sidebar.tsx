@@ -18,6 +18,7 @@ import {
   SunIcon,
 } from "@/components/icons";
 import type { TranslationKey } from "@/locales";
+import { getAppInfo } from "@/lib/tauri-api";
 
 const LINKS: { href: string; icon: typeof HomeIcon; key: TranslationKey }[] = [
   { href: "/", icon: HomeIcon, key: "nav.home" },
@@ -41,9 +42,13 @@ export function Sidebar() {
   const pathname = usePathname();
   const { t, preferences, setThemeMode, batchStatus } = useAppContext();
   const [collapsed, setCollapsed] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
+    getAppInfo()
+      .then((info) => setVersion(info.version))
+      .catch(() => {});
   }, []);
 
   function toggleCollapsed() {
@@ -67,7 +72,10 @@ export function Sidebar() {
         <img src="/jadoo-icon.png" alt="Jadoo" className="logo-mark" />
         {!collapsed && (
           <div className="brand-text">
-            <div className="brand-name">Jadoo</div>
+            <div className="brand-name-row">
+              <span className="brand-name">Jadoo</span>
+              {version && <span className="brand-version">v{version}</span>}
+            </div>
             <div className="brand-subtitle">{t("sidebar.subtitle")}</div>
           </div>
         )}

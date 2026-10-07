@@ -9,9 +9,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { autostart, getAppPreferences, onBatchProgress, saveAppPreferences } from "@/lib/tauri-api";
+import { check as checkForUpdate } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import {
+  autostart,
+  getAppPreferences,
+  onBatchProgress,
+  saveAppPreferences,
+  updateTrayLanguage,
+} from "@/lib/tauri-api";
 import { localeDir, translate, type TranslationKey } from "@/locales";
 import { ACCENT_COLORS } from "@/lib/accent-colors";
+import { useToast } from "@/context/ToastContext";
 import type { AppPreferences, BatchProgressEvent, Language, ThemeMode } from "@/lib/types";
 
 const DEFAULT_PREFERENCES: AppPreferences = {
@@ -53,6 +62,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [batchStatus, setBatchStatus] = useState<BatchStatus>("idle");
   const unlistenRef = useRef<(() => void) | null>(null);
+  const languageRef = useRef<Language>(DEFAULT_PREFERENCES.language);
+  const { showToast } = useToast();
 
   useEffect(() => {
     getAppPreferences()
@@ -76,13 +87,54 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       .finally(() => setLoaded(true));
 
     onBatchProgress((e: BatchProgressEvent) => {
-      if (e.kind === "start") setBatchStatus("running");
-      else if (e.kind === "done") setBatchStatus("idle");
+      if (e.kind === "start") {
+        setBatchStatus("running");
+        showToast(translate(languageRef.current, "toast.batchStarted"), { id: "batch-status" });
+      } else if (e.kind === "done") {
+        setBatchStatus("idle");
+        showToast(
+          translate(languageRef.current, "toast.batchFinished", {
+            success: e.success ?? 0,
+            failed: e.failed ?? 0,
+          }),
+          { id: "batch-status" },
+        );
+      }
     }).then((un) => {
       unlistenRef.current = un;
     });
 
+    // App khulte hi khud update check karo — naya version mile to Later/
+    // Update Now wala toast dikhao. Updater configure na hua ho (pubkey
+    // waghera) to chup chap fail ho jata hai, koi disruption nahi.
+    checkForUpdate()
+      .then((update) => {
+        if (!update?.available) return;
+        showToast(
+          translate(languageRef.current, "toast.updateAvailable", { version: update.version }),
+          {
+            id: "update-available",
+            autoDismiss: false,
+            actions: [
+              { label: translate(languageRef.current, "toast.later"), onClick: () => {} },
+              {
+                label: translate(languageRef.current, "toast.updateNow"),
+                primary: true,
+                onClick: () => {
+                  update
+                    .downloadAndInstall()
+                    .then(() => relaunch())
+                    .catch(() => {});
+                },
+              },
+            ],
+          },
+        );
+      })
+      .catch(() => {});
+
     return () => unlistenRef.current?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -95,7 +147,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   }, [preferences.themeMode, preferences.accentColor]);
 
   useEffect(() => {
+    languageRef.current = preferences.language;
     document.documentElement.dir = localeDir(preferences.language);
+    updateTrayLanguage(preferences.language).catch(() => {});
   }, [preferences.language]);
 
   useEffect(() => {

@@ -1,9 +1,9 @@
-use std::fs;
-use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
+
+use super::db::Db;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,7 +54,7 @@ impl Default for BatchSettings {
 }
 
 /// App-wide (project-independent) preferences: language, theme mode, accent
-/// color. Alag file mein rakhi hain taake BatchSettings (jo project-specific
+/// color. Alag table mein rakhi hain taake BatchSettings (jo project-specific
 /// hai) se mix na ho.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -112,8 +112,6 @@ pub struct HistoryRecord {
 pub struct AppInfo {
     pub name: String,
     pub version: String,
-    /// Git-hash/CI-tag se compute hua build version (build.rs mein) —
-    /// dev builds mein "dev-<hash>", CI/release builds mein "v1.0.0".
     pub build_version: String,
     pub platform: String,
 }
@@ -125,46 +123,16 @@ fn now_ms() -> i64 {
         .unwrap_or(0)
 }
 
-fn config_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let dir = app
-        .path()
-        .app_config_dir()
-        .map_err(|e| format!("App config dir nahi mila: {e}"))?;
-    fs::create_dir_all(&dir).map_err(|e| format!("Config folder nahi ban saka: {e}"))?;
-    Ok(dir)
+pub fn now_epoch_ms() -> i64 {
+    now_ms()
 }
 
-fn profiles_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(config_dir(app)?.join("profiles.json"))
+pub fn new_history_id() -> String {
+    format!("h{}", now_ms())
 }
 
-fn settings_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(config_dir(app)?.join("settings.json"))
-}
-
-fn preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(config_dir(app)?.join("preferences.json"))
-}
-
-fn history_path(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(config_dir(app)?.join("history.json"))
-}
-
-fn read_json<T: for<'de> Deserialize<'de> + Default>(path: &PathBuf) -> Result<T, String> {
-    if !path.exists() {
-        return Ok(T::default());
-    }
-    let raw = fs::read_to_string(path).map_err(|e| format!("{path:?} read nahi hui: {e}"))?;
-    if raw.trim().is_empty() {
-        return Ok(T::default());
-    }
-    serde_json::from_str(&raw).map_err(|e| format!("{path:?} parse nahi hui: {e}"))
-}
-
-fn write_json<T: Serialize>(path: &PathBuf, value: &T) -> Result<(), String> {
-    let raw =
-        serde_json::to_string_pretty(value).map_err(|e| format!("{path:?} serialize nahi hui: {e}"))?;
-    fs::write(path, raw).map_err(|e| format!("{path:?} save nahi hui: {e}"))
+fn lock(db: &Db) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
+    db.0.lock().map_err(|_| "Database lock poisoned ho gaya.".to_string())
 }
 
 // ---------------------------------------------------------------------------
@@ -172,30 +140,22 @@ fn write_json<T: Serialize>(path: &PathBuf, value: &T) -> Result<(), String> {
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub fn get_profiles(app: AppHandle) -> Result<Vec<LogoProfile>, String> {
-    read_json(&profiles_path(&app)?)
+pub fn get_profiles(db: State<Db>) -> Result<Vec<LogoProfile>, String> {
+    super::db::get_profiles(&*lock(&db)?)
 }
 
 #[tauri::command]
-pub fn save_profile(app: AppHandle, profile: LogoProfile) -> Result<Vec<LogoProfile>, String> {
-    let path = profiles_path(&app)?;
-    let mut profiles: Vec<LogoProfile> = read_json(&path)?;
-    if let Some(existing) = profiles.iter_mut().find(|p| p.id == profile.id) {
-        *existing = profile;
-    } else {
-        profiles.push(profile);
-    }
-    write_json(&path, &profiles)?;
-    Ok(profiles)
+pub fn save_profile(db: State<Db>, profile: LogoProfile) -> Result<Vec<LogoProfile>, String> {
+    let conn = lock(&db)?;
+    super::db::save_profile(&conn, &profile)?;
+    super::db::get_profiles(&conn)
 }
 
 #[tauri::command]
-pub fn delete_profile(app: AppHandle, id: String) -> Result<Vec<LogoProfile>, String> {
-    let path = profiles_path(&app)?;
-    let mut profiles: Vec<LogoProfile> = read_json(&path)?;
-    profiles.retain(|p| p.id != id);
-    write_json(&path, &profiles)?;
-    Ok(profiles)
+pub fn delete_profile(db: State<Db>, id: String) -> Result<Vec<LogoProfile>, String> {
+    let conn = lock(&db)?;
+    super::db::delete_profile(&conn, &id)?;
+    super::db::get_profiles(&conn)
 }
 
 // ---------------------------------------------------------------------------
@@ -203,13 +163,13 @@ pub fn delete_profile(app: AppHandle, id: String) -> Result<Vec<LogoProfile>, St
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub fn get_batch_settings(app: AppHandle) -> Result<BatchSettings, String> {
-    read_json(&settings_path(&app)?)
+pub fn get_batch_settings(db: State<Db>) -> Result<BatchSettings, String> {
+    super::db::get_batch_settings(&*lock(&db)?)
 }
 
 #[tauri::command]
-pub fn save_batch_settings(app: AppHandle, settings: BatchSettings) -> Result<(), String> {
-    write_json(&settings_path(&app)?, &settings)
+pub fn save_batch_settings(db: State<Db>, settings: BatchSettings) -> Result<(), String> {
+    super::db::save_batch_settings(&*lock(&db)?, &settings)
 }
 
 // ---------------------------------------------------------------------------
@@ -217,13 +177,13 @@ pub fn save_batch_settings(app: AppHandle, settings: BatchSettings) -> Result<()
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub fn get_app_preferences(app: AppHandle) -> Result<AppPreferences, String> {
-    read_json(&preferences_path(&app)?)
+pub fn get_app_preferences(db: State<Db>) -> Result<AppPreferences, String> {
+    super::db::get_app_preferences(&*lock(&db)?)
 }
 
 #[tauri::command]
-pub fn save_app_preferences(app: AppHandle, preferences: AppPreferences) -> Result<(), String> {
-    write_json(&preferences_path(&app)?, &preferences)
+pub fn save_app_preferences(db: State<Db>, preferences: AppPreferences) -> Result<(), String> {
+    super::db::save_app_preferences(&*lock(&db)?, &preferences)
 }
 
 // ---------------------------------------------------------------------------
@@ -231,37 +191,20 @@ pub fn save_app_preferences(app: AppHandle, preferences: AppPreferences) -> Resu
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
-pub fn get_history(app: AppHandle) -> Result<Vec<HistoryRecord>, String> {
-    let mut records: Vec<HistoryRecord> = read_json(&history_path(&app)?)?;
-    records.sort_by(|a, b| b.started_at.cmp(&a.started_at));
-    Ok(records)
+pub fn get_history(db: State<Db>) -> Result<Vec<HistoryRecord>, String> {
+    super::db::get_history(&*lock(&db)?)
 }
 
 #[tauri::command]
-pub fn clear_history(app: AppHandle) -> Result<(), String> {
-    write_json(&history_path(&app)?, &Vec::<HistoryRecord>::new())
+pub fn clear_history(db: State<Db>) -> Result<(), String> {
+    super::db::clear_history(&*lock(&db)?)
 }
 
-/// Batch run khatam hone ke baad ffmpeg.rs se call hota hai — record ko
-/// history.json mein append kar deta hai. `started_at`/`id` caller deta hai.
+/// Batch run khatam hone ke baad ffmpeg.rs se call hota hai.
 pub fn append_history(app: &AppHandle, record: HistoryRecord) -> Result<(), String> {
-    let path = history_path(app)?;
-    let mut records: Vec<HistoryRecord> = read_json(&path)?;
-    records.push(record);
-    // Bohat purani entries jama na hon — sirf recent 200 rakho.
-    if records.len() > 200 {
-        let drop = records.len() - 200;
-        records.drain(0..drop);
-    }
-    write_json(&path, &records)
-}
-
-pub fn new_history_id() -> String {
-    format!("h{}", now_ms())
-}
-
-pub fn now_epoch_ms() -> i64 {
-    now_ms()
+    let db = app.state::<Db>();
+    let conn = lock(&db)?;
+    super::db::append_history(&conn, &record)
 }
 
 #[tauri::command]

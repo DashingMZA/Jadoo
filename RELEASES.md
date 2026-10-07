@@ -5,6 +5,44 @@ banata hai, aur files GitHub Releases se serve hoti hain** — aapki apni
 website (jadoo.bond) sirf ek download button dikhati hai jo GitHub ke actual
 file URL par point karta hai. Koi alag server/hosting/bandwidth cost nahi.
 
+## ⚠️ Updater signing key ≠ SmartScreen fix (ye 2 alag cheezein hain)
+
+Jo `TAURI_SIGNING_PRIVATE_KEY`/pubkey/password aap already use kar rahe ho,
+wo sirf **ek kaam** karta hai: jab app khud apne updates download kare, tab
+check kare ke wo update asli hai (tampered nahi) — isका Microsoft/Windows se
+koi lena dena nahi, aur ye SmartScreen ko bilkul dikhta hi nahi.
+
+SmartScreen jisse control hota hai wo ek **alag, poori tarah se alag
+cryptographic system** hai: **Windows Authenticode code-signing**
+(X.509 certificate, kisi trusted CA se kharida hua) — ye updater ki
+minisign key se bilkul different standard hai, dono ek dusre ki jagah use
+nahi ho sakte. Aapki updater-key chahe kitni bhi sahi se set ho, SmartScreen
+pe uska koi asar nahi padega — iske liye alag se Authenticode certificate
+hi chahiye hoga (neeche detail hai).
+
+## ⚠️ "Windows protected your PC" (SmartScreen) — honest explanation
+
+Ye warning kisi bhi **unsigned** Windows app pe aati hai, chahe wo GitHub se
+mile ya kahin se bhi — isse koi config ya GitHub-release-setting fix nahi
+karti. Iski wajah: aapka installer kisi trusted Certificate Authority (CA)
+se signed nahi hai, isliye Windows "Unknown publisher" dikhata hai aur
+SmartScreen block kar deta hai.
+
+**Fix karna ho to:**
+1. Ek **Authenticode code-signing certificate** kharidna hoga (DigiCert,
+   SSL.com, Sectigo waghera se, ~$100-400/saal). **EV (Extended Validation)**
+   certificate le to SmartScreen turant trust kar leta hai; normal
+   (OV) certificate le to pehle kuch waqt tak (downloads/reputation banne
+   tak) warning aati rehti hai, phir khud-ba-khud band ho jati hai.
+2. CI mein `tauri-action` ko certificate + password secrets de do
+   (`WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD`) — ye automatically
+   installer ko sign kar dega.
+
+Abhi ke liye users ko bas **"Run anyway"** click karna hoga — ye normal hai
+unsigned open-source/indie apps ke liye (bohot saare chhote apps isi
+tarah distribute hote hain). Jab chahen certificate le lena, bata dena,
+workflow update kar dunga.
+
 ## ⚠️ Identifier badal gaya hai (`bond.jadoo.app` → `com.csofts.jadoo`)
 
 Agar aapke test machine pe purane identifier (`bond.jadoo.app`) wali Jadoo
