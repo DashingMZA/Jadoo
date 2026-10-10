@@ -12,9 +12,18 @@ use tauri_plugin_autostart::MacosLauncher;
 fn tray_text(language: &str) -> (&'static str, &'static str) {
     match language {
         "ur" => ("جادو کھولیں", "باہر نکلیں"),
-        "hi" => ("जादू खोलें", "बाहर निकलें"),
+        "pa" => ("جادو کھولو", "چھڈ دینا"),
+        "sd" => ("جادو کوليو", "ڇڏي ڏيو."),
+        "bal" => ("جاڈو ءَ پچ کن", "یل کن"),
+        "ps" => ("جادو خلاص کړئ", "وتل"),
         "ar" => ("افتح جادو", "إنهاء"),
+        "fa" => ("جادو را باز کن", "خروج"),
+        "hi" => ("जादू खोलें", "बाहर निकलें"),
         "de" => ("Jadoo öffnen", "Beenden"),
+        "fr" => ("Kopwe suki Jadoo", "Quitter"),
+        "it" => ("Apri Jadoo", "Esentato"),
+        "vi" => ("Mở Jadoo", "Quitter"),
+        "ja" => ("Jadooを開く", "やめる"),
         _ => ("Open Jadoo", "Quit"),
     }
 }

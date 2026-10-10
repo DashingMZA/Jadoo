@@ -1,17 +1,17 @@
 import en from "./en.json";
 import ur from "./ur.json";
-import ur from "./pa.json";
-import ur from "./sd.json";
-import ur from "./bal.json";
-import ur from "./ps.json";
+import pa from "./pa.json";
+import sd from "./sd.json";
+import bal from "./bal.json";
+import ps from "./ps.json";
 import ar from "./ar.json";
-import de from "./fa.json";
+import fa from "./fa.json";
 import hi from "./hi.json";
 import de from "./de.json";
-import de from "./fr.json";
-import de from "./it.json";
-import de from "./vi.json";
-import de from "./ja.json";
+import fr from "./fr.json";
+import it from "./it.json";
+import vi from "./vi.json";
+import ja from "./ja.json";
 
 /**
  * ==== NAYI LANGUAGE ADD KARNE KA TAREEKA (sirf 3 steps) ====
