@@ -45,11 +45,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Zaheer Ahmad",
+    "publisher": "cSofts Inc",
     "category": "Video",
     "shortDescription": "Batch video logo overlay",
     "longDescription": "Jadoo overlays your logo onto an entire folder of videos in one batch run — pick a layout profile (position, size, transparency) per video size/aspect-ratio, and export at your chosen quality.",
-    "copyright": "Copyright © 2026 Zaheer Ahmad. All rights reserved.",
+    "copyright": "Copyright © 2026 cSofts Inc. All rights reserved.",
     "externalBin": ["binaries/ffmpeg", "binaries/ffprobe"],
     "resources": ["sample-videos/**/*", "sample-videos.json"],
     "windows": {
