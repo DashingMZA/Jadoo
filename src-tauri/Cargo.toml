@@ -1,9 +1,8 @@
 [package]
 name = "jadoo"
-version = "1.0.11"
+version = "1.0.12"
 description = "Jadoo — batch video logo overlay desktop app"
 authors = ["Zaheer Ahmad"]
-repository = "https://github.com/dashingmza/jadoo"
 edition = "2021"
 
 [lib]

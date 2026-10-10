@@ -8,6 +8,10 @@
   --accent: #7c5cff;
   --accent-contrast: #ffffff;
   --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  /* Social-card CSS (dusre project se aayi) in 2 naamon se variables use karti
+     hai — Jadoo ke apne variables pe alias kiye taake gradient sahi chale. */
+  --primary: var(--accent);
+  --bg1: var(--bg-elevated);
   --success: #33c37f;
   --danger: #ef5b5b;
   --radius: 10px;
@@ -90,6 +94,7 @@ a {
 }
 
 .sidebar-brand .brand-text {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
 }
@@ -97,6 +102,7 @@ a {
 .sidebar-brand .brand-name-row {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: 6px;
 }
 
@@ -489,6 +495,72 @@ button:disabled {
   border-color: color-mix(in srgb, var(--social-color, var(--primary)) 40%, var(--border));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--social-color, var(--primary)) 12%, transparent);
   transform: translateY(-1px);
+}
+
+/* Social card ke andar: icon tile + label/sub-text + arrow */
+.social-pill-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: start;
+}
+
+.social-icon-tile {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--social-color, var(--primary)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--social-color, var(--primary)) 25%, var(--border));
+}
+
+.social-card-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* currentColor wale icons dark/light dono themes mein dikhein */
+.social-icon-x,
+.social-icon-github {
+  color: var(--text);
+}
+
+.social-icon-medium {
+  color: #00ab6c;
+}
+
+.social-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.social-label {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.social-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.social-arrow {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  display: flex;
+}
+
+/* RTL (Urdu/Arabic) mein arrow bhi shishe jaisa ulta ho jaye */
+[dir="rtl"] .social-arrow svg {
+  transform: scaleX(-1);
 }
 
 /* Toast notifications (update-available, batch start/end) */

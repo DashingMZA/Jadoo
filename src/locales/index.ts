@@ -1,8 +1,17 @@
 import en from "./en.json";
 import ur from "./ur.json";
-import hi from "./hi.json";
+import ur from "./pa.json";
+import ur from "./sd.json";
+import ur from "./bal.json";
+import ur from "./ps.json";
 import ar from "./ar.json";
+import de from "./fa.json";
+import hi from "./hi.json";
 import de from "./de.json";
+import de from "./fr.json";
+import de from "./it.json";
+import de from "./vi.json";
+import de from "./ja.json";
 
 /**
  * ==== NAYI LANGUAGE ADD KARNE KA TAREEKA (sirf 3 steps) ====
@@ -17,9 +26,18 @@ import de from "./de.json";
 export const LOCALES = [
   { code: "en", label: "English", dir: "ltr", dictionary: en },
   { code: "ur", label: "اردو", dir: "rtl", dictionary: ur },
-  { code: "hi", label: "हिन्दी", dir: "ltr", dictionary: hi },
+  { code: "pa", label: "پنجابی", dir: "rtl", dictionary: pa },
+  { code: "sd", label: "سنڌي", dir: "rtl", dictionary: sd },
+  { code: "bal", label: "بلوچی", dir: "rtl", dictionary: bal },
+  { code: "ps", label: "پښتو", dir: "rtl", dictionary: ps },
   { code: "ar", label: "العربية", dir: "rtl", dictionary: ar },
+  { code: "fa", label: "فارسی", dir: "rtl", dictionary: fa },
+  { code: "hi", label: "हिन्दी", dir: "ltr", dictionary: hi },
   { code: "de", label: "Deutsch", dir: "ltr", dictionary: de },
+  { code: "fr", label: "Français", dir: "ltr", dictionary: fr },
+  { code: "it", label: "Italiano", dir: "ltr", dictionary: it },
+  { code: "vi", label: "Tiếng Việt", dir: "ltr", dictionary: vi },
+  { code: "ja", label: "日本語", dir: "ltr", dictionary: ja },
 ] as const;
 
 export type Language = (typeof LOCALES)[number]["code"];

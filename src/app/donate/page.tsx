@@ -89,9 +89,11 @@ export default function DonatePage() {
           ))}
         </div>
       )}
-      <p className="hint" style={{ marginTop: 12, textAlign: "center" }}>
-            {t("donate.thankYou")}
-          </p>
+
+      {/* Dono tabs (Crypto aur Other) ke liye ek hi thank-you message */}
+      <p className="hint" style={{ marginTop: 4, textAlign: "center" }}>
+        {t("donate.thankYou")}
+      </p>
     </div>
   );
 }

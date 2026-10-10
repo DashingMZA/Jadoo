@@ -149,5 +149,6 @@
   "contact.success": "Message sent — thank you!",
   "contact.fillAllFields": "Please fill in all fields.",
   "contact.setupRequired": "Contact form isn't set up yet.",
-  "contact.emailLabel": "Or email us directly:"
+  "contact.emailLabel": "Or email us directly:",
+  "social.openProfile": "Open profile"
 }

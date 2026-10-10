@@ -1,6 +1,6 @@
 {
   "name": "jadoo",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "private": true,
   "description": "Jadoo \u2014 batch video logo overlay desktop app (Tauri 2 + Next.js)",
   "author": "Zaheer Ahmad",

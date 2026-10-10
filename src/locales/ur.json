@@ -149,5 +149,6 @@
   "contact.success": "پیغام بھیج دیا گیا — شکریہ!",
   "contact.fillAllFields": "براہ کرم تمام خانے پُر کریں۔",
   "contact.setupRequired": "کانٹیکٹ فارم ابھی سیٹ اپ نہیں ہوا۔",
-  "contact.emailLabel": "یا سیدھا ای میل کریں:"
+  "contact.emailLabel": "یا سیدھا ای میل کریں:",
+  "social.openProfile": "پروفائل کھولیں"
 }

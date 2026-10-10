@@ -149,5 +149,6 @@
   "contact.success": "Nachricht gesendet — danke!",
   "contact.fillAllFields": "Bitte alle Felder ausfüllen.",
   "contact.setupRequired": "Kontaktformular ist noch nicht eingerichtet.",
-  "contact.emailLabel": "Oder schreib uns direkt eine E-Mail:"
+  "contact.emailLabel": "Oder schreib uns direkt eine E-Mail:",
+  "social.openProfile": "Profil öffnen"
 }

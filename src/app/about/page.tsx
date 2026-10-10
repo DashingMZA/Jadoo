@@ -8,6 +8,19 @@ import { useAppContext } from "@/context/AppContext";
 import { useToast } from "@/context/ToastContext";
 import { getAppInfo } from "@/lib/tauri-api";
 import { SOCIAL_LINKS } from "@/lib/social";
+import { ArrowUpRightIcon } from "@/components/icons";
+import {
+  IconFacebook,
+  IconGithub,
+  IconInstagram,
+  IconLinkedin,
+  IconMedium,
+  IconPinterest,
+  IconReddit,
+  IconTelegram,
+  IconX,
+  IconYoutube,
+} from "@/components/SocialIcons";
 import { SUPPORT_EMAIL, ContactSendError, sendContactMessage } from "@/lib/contact";
 
 type Tab = "app" | "social" | "contact";
@@ -116,6 +129,20 @@ function AppTab() {
   );
 }
 
+// social.ts ki har link ki `id` -> uska brand icon
+const SOCIAL_ICONS = {
+  facebook: IconFacebook,
+  x: IconX,
+  instagram: IconInstagram,
+  youtube: IconYoutube,
+  telegram: IconTelegram,
+  linkedin: IconLinkedin,
+  github: IconGithub,
+  medium: IconMedium,
+  reddit: IconReddit,
+  pinterest: IconPinterest,
+} as const;
+
 function SocialTab() {
   const { t } = useAppContext();
   return (
@@ -123,16 +150,30 @@ function SocialTab() {
       <strong>{t("about.tabSocial")}</strong>
       <p className="hint" style={{ marginBottom: 14 }}>{t("social.subtitle")}</p>
       <div className="social-grid">
-        {SOCIAL_LINKS.map((link) => (
-          <button
-            key={link.id}
-            className="social-pill"
-            style={{ ["--social-color" as string]: link.color }}
-            onClick={() => openUrl(link.href)}
-          >
-            {link.label}
-          </button>
-        ))}
+        {SOCIAL_LINKS.map((link) => {
+          const Icon = SOCIAL_ICONS[link.id as keyof typeof SOCIAL_ICONS];
+          return (
+            <button
+              key={link.id}
+              className="social-pill"
+              style={{ ["--social-color" as string]: link.color }}
+              onClick={() => openUrl(link.href)}
+            >
+              <span className="social-pill-inner">
+                <span className="social-icon-tile">
+                  {Icon && <Icon className="social-card-icon" />}
+                </span>
+                <span className="social-text">
+                  <span className="social-label">{link.label}</span>
+                  <span className="social-sub">{t("social.openProfile")}</span>
+                </span>
+                <span className="social-arrow">
+                  <ArrowUpRightIcon />
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

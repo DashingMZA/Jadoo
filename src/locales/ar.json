@@ -149,5 +149,6 @@
   "contact.success": "تم إرسال الرسالة — شكراً لك!",
   "contact.fillAllFields": "الرجاء ملء جميع الحقول.",
   "contact.setupRequired": "نموذج الاتصال غير مُعد بعد.",
-  "contact.emailLabel": "أو راسلنا مباشرة عبر البريد الإلكتروني:"
+  "contact.emailLabel": "أو راسلنا مباشرة عبر البريد الإلكتروني:",
+  "social.openProfile": "فتح الملف الشخصي"
 }

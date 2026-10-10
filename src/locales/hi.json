@@ -149,5 +149,6 @@
   "contact.success": "संदेश भेज दिया गया — धन्यवाद!",
   "contact.fillAllFields": "कृपया सभी फ़ील्ड भरें।",
   "contact.setupRequired": "कॉन्टैक्ट फॉर्म अभी सेट अप नहीं हुआ।",
-  "contact.emailLabel": "या सीधे ईमेल करें:"
+  "contact.emailLabel": "या सीधे ईमेल करें:",
+  "social.openProfile": "प्रोफाइल खोलें"
 }
