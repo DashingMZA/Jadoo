@@ -87,24 +87,42 @@ page ka "Check for Updates" button gracefully "not configured" message dega.
 | SQLite database — schema, queries, JSON-file migration (Rust) | `src-tauri/src/commands/db.rs` |
 | Tray / close-to-tray / autostart / single-instance | `src-tauri/src/lib.rs` |
 | Main config (name/version/identifier/port) | `src-tauri/tauri.conf.json` |
-| Sample/default preview videos config | `src-tauri/sample-videos.json`, `src-tauri/sample-videos/` |
+| Sample/default preview videos — URL config (videos khud download hoti hain) | `src-tauri/sample-videos.json` |
 
 ## Sample/default preview videos (Home page aur Layout Profiles pe auto-preview)
 
-Home page (aur Layout Profiles page ka auto-preview) ab **sirf default sample
-videos** dikhata hai — koi manual file-pick nahi (Layout Profiles page pe ek
-"apni sample video se preview dikhao" button abhi bhi hai, jaisa aapne
-maanga). In default videos ko set karne ke 2 tareeke hain:
+Sample videos ab **installer ke sath bundle nahi hoti** (installer chhota
+rehta hai). Wo **app ke pehli baar chalne par, background mein, Google Drive
+se download hoti hain** aur `app_local_data_dir()/sample-videos/` mein save
+ho jati hain — dobara download nahi hoti. Download chalte waqt ek toast
+dikhta hai ("Downloading sample videos…"), khatam hone par "ready".
 
-1. **Bundle karo** — `src-tauri/sample-videos/<slug>.mp4` (exact naam ke liye
-   `src-tauri/sample-videos/README.md` dekho).
-2. **Google Drive / koi bhi URL (recommended)** — `src-tauri/sample-videos.json`
-   mein us resolution label ke against direct-download URL daal do. App
-   pehli baar use hone pe khud download karke cache kar legi.
+- URLs `src-tauri/sample-videos.json` mein hain (`byResolutionLabel` aur
+  `byAspect`) — sirf ye chhoti JSON installer ke sath aati hai. Naya
+  resolution/aspect add karna ho to bas yahan ek URL daal do.
+- Ek hi URL do jagah ho (label + aspect) to wo sirf **ek baar** download hoti
+  hai (cache file ka naam URL ke hash se banta hai).
+- Download adhoori reh jaye (net band, app band) to `.part` file mein hoti
+  hai aur kabhi "poori video" samajh kar use nahi hoti.
+- Agar Drive video ki jagah web-page de (file "Anyone with the link" nahi,
+  ya bohot badi), to app isse pehchan leti hai aur download fail mana jata
+  hai (toast: "Couldn't download…") — agli baar app khulne par dobara koshish
+  hoti hai. Bade files ke liye `drive.usercontent.google.com/download?...`
+  URLs ke sath app khud `&confirm=t` jod deti hai.
+- Preview kisi video ke download hone se pehle maange to usi waqt wo ek
+  video download ho kar chal jati hai (lazy fallback).
+- Layout Profiles pe "Apni sample video se preview dikhao…" button abhi
+  bhi hai (user apni local video kholta hai — download nahi).
 
-App pehle bundled file check karti hai, phir cache, phir URL se download.
-Koi sample configure na ho to preview khali (placeholder) dikhega — batch
-processing par isse koi asar nahi padta.
+**Purani mp4 files git/project se hatane ke liye** (agar `src-tauri/sample-videos/`
+folder aapke repo mein abhi bhi hai):
+
+```bash
+git rm -r --cached src-tauri/sample-videos
+rm -rf src-tauri/sample-videos
+git commit -m "Sample videos ab first-run pe download hoti hain"
+```
+(`.gitignore` mein ye folder ab ignored hai, dobara commit nahi hoga.)
 
 ## Naye features (latest update)
 
@@ -197,10 +215,6 @@ processing par isse koi asar nahi padta.
 - Sidebar ke active nav item ka background ab **solid accent color** hai,
   icon/text uske upar readable contrasting color (white ya dark, accent ke
   hisaab se) mein.
-- Sample-videos folder + `sample-videos.json` dono **installer ke sath
-  bundle** hain (Program Files jaisi protected location) — normal user inhe
-  edit nahi kar sakta. Apni video try karni ho to Layout Profiles page ka
-  "Apni sample video se preview dikhao…" button hai.
 
 ## Naye features (usse pehle ki update)
 

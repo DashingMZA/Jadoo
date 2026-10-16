@@ -110,3 +110,12 @@ export interface HistoryRecord {
   failed: number;
   files: HistoryFileEntry[];
 }
+
+// ---------------------------------------------------------------------------
+// Sample videos (first-run background download)
+// ---------------------------------------------------------------------------
+
+export type SampleVideosEvent =
+  | { kind: "start"; total: number }
+  | { kind: "done"; downloaded: number }
+  | { kind: "error"; failed: number; message: string };

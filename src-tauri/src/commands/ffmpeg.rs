@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use tauri::{AppHandle, Emitter, Manager};
@@ -97,33 +98,24 @@ fn next_start_number(output_folder: &Path, project_name: &str) -> u32 {
 // ---------------------------------------------------------------------------
 // Default / sample preview videos (per resolution)
 //
-// Pehle ye ffmpeg se ek frame extract karke JPEG banate the — kuch videos
-// (odd pixel format/color space) ke sath ye corrupted/glitchy image deta tha.
-// Ab hum seedha asal video file ka LOCAL PATH return karte hain aur frontend
-// use `convertFileSrc()` ke through ek native <video> tag mein play karta hai
-// — koi re-encode nahi, koi corruption nahi, aur bonus mein video actually
-// play bhi hoti hai (static frame ki bajaye).
+// Ye videos installer ke sath BUNDLE NAHI hoti (installer chhota rehta hai).
+// Pehli baar app chalne par `prefetch_sample_videos` background mein unhe
+// `sample-videos.json` mein diye gaye URLs (Google Drive) se download karke
+// app-data folder mein rakh deta hai. Agar koi preview abhi download hone se
+// pehle maange, to `get_default_video_path` usi waqt wo ek video download kar
+// leta hai (lazy fallback).
+//
+// Frontend ko asal video file ka LOCAL PATH milta hai aur wo `convertFileSrc()`
+// se native <video> tag mein play karta hai.
 // ---------------------------------------------------------------------------
-
-fn slugify(label: &str) -> String {
-    label
-        .chars()
-        .map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_lowercase() } else { '-' })
-        .collect::<String>()
-        .split('-')
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join("-")
-}
 
 /// `src-tauri/sample-videos.json` shape:
 /// ```json
 /// { "byResolutionLabel": { "<exact label>": "<url>" },
 ///   "byAspect": { "16:9": "<url>", "9:16": "<url>", ... } }
 /// ```
-/// Developer isse build se pehle bharta hai; end-user isse edit nahi karta
-/// (ye installer ke sath bundle hoti hai, Program Files jaisi protected
-/// location mein).
+/// Developer isse build se pehle bharta hai; ye installer ke sath bundle hoti
+/// hai (sirf ye chhoti JSON — videos nahi). End-user isse edit nahi karta.
 #[derive(Debug, Default, serde::Deserialize)]
 struct SampleVideoUrls {
     #[serde(default, rename = "byResolutionLabel")]
@@ -150,21 +142,146 @@ fn load_sample_video_urls(app: &AppHandle) -> SampleVideoUrls {
     SampleVideoUrls::default()
 }
 
-/// Sample video resolve karne ki priority (exact resolution ke liye, phir
-/// aspect-ratio ke liye — isi tarteeb se dono "bundled local file" aur phir
-/// "URL se download+cache" try hota hai):
-/// 1. Bundled resource: `sample-videos/<slug-of-label>.mp4`
-/// 2. Cache: `app_cache_dir/sample-videos/<slug-of-label>.mp4`
-/// 3. `sample-videos.json` -> `byResolutionLabel[label]` (download+cache)
-/// 4. Bundled resource: `sample-videos/<slug-of-aspect>.mp4`
-/// 5. Cache: `app_cache_dir/sample-videos/<slug-of-aspect>.mp4`
-/// 6. `sample-videos.json` -> `byAspect[aspect]` (download+cache)
+/// URL ka chhota stable hash (FNV-1a). Cache file ka naam isi se banta hai,
+/// isliye agar ek hi URL do jagah (label + aspect) likha ho to wo video sirf
+/// EK baar download hoti hai.
+fn fnv1a(text: &str) -> u64 {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in text.as_bytes() {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+/// Downloaded sample videos yahan rehti hain (app-data, cache nahi — cache
+/// folder ko system kabhi bhi saaf kar sakta hai).
+fn sample_videos_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_local_data_dir()
+        .map_err(|e| format!("App data folder nahi mila: {e}"))?
+        .join("sample-videos");
+    fs::create_dir_all(&dir).map_err(|e| format!("Sample-videos folder nahi bana: {e}"))?;
+    Ok(dir)
+}
+
+fn cached_path_for(app: &AppHandle, url: &str) -> Result<PathBuf, String> {
+    Ok(sample_videos_dir(app)?.join(format!("sv-{:016x}.mp4", fnv1a(url))))
+}
+
+/// Google Drive kabhi video ki jagah ek HTML page (virus-scan / permission
+/// warning) bhej deta hai — usse pehchan ne ke liye pehle non-space byte `<`
+/// hota hai.
+fn looks_like_html(first_chunk: &[u8]) -> bool {
+    first_chunk
+        .iter()
+        .find(|b| !b.is_ascii_whitespace())
+        .map(|b| *b == b'<')
+        .unwrap_or(false)
+}
+
+/// Bade Google Drive files pe Drive direct download ki jagah "virus scan"
+/// wala web-page deta hai; `confirm=t` us page ko skip kar deta hai (chhoti
+/// files pe ye parameter ignore ho jata hai).
+fn normalize_download_url(url: &str) -> String {
+    if url.contains("drive.usercontent.google.com/download") && !url.contains("confirm=") {
+        format!("{url}&confirm=t")
+    } else {
+        url.to_string()
+    }
+}
+
+async fn download_into(url: &str, part_path: &Path) -> Result<(), String> {
+    let mut response = reqwest::get(url)
+        .await
+        .map_err(|e| format!("Sample video download nahi ho saki: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Sample video download fail hui (HTTP {}).", response.status()));
+    }
+
+    let is_html_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map(|ct| ct.to_ascii_lowercase().starts_with("text/html"))
+        .unwrap_or(false);
+    if is_html_type {
+        return Err(
+            "Download link ne video ki jagah web-page diya — Google Drive file \"Anyone with the link\" hona chahiye.".to_string(),
+        );
+    }
+
+    let mut file = fs::File::create(part_path)
+        .map_err(|e| format!("Sample video file nahi ban saki: {e}"))?;
+    let mut checked_first = false;
+    let mut total: usize = 0;
+
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|e| format!("Sample video download beech mein ruk gayi: {e}"))?
+    {
+        if !checked_first {
+            checked_first = true;
+            if looks_like_html(&chunk) {
+                return Err(
+                    "Download link ne video ki jagah web-page diya — Google Drive file \"Anyone with the link\" hona chahiye.".to_string(),
+                );
+            }
+        }
+        total += chunk.len();
+        file.write_all(&chunk)
+            .map_err(|e| format!("Sample video save nahi ho saki: {e}"))?;
+    }
+
+    if total == 0 {
+        return Err("Download hui sample video khali thi.".to_string());
+    }
+    Ok(())
+}
+
+/// URL ko cache mein download karta hai (agar pehle se maujood ho to seedha
+/// path return). Pehle `.part` file mein likhta hai phir rename karta hai —
+/// isliye adhoori download kabhi "poori video" samajh kar use nahi hoti.
+async fn download_to_cache(app: &AppHandle, url: &str) -> Result<PathBuf, String> {
+    let final_path = cached_path_for(app, url)?;
+    if final_path.exists() {
+        return Ok(final_path);
+    }
+
+    let part_path = final_path.with_extension(format!("part{}", profiles::now_epoch_ms()));
+
+    match download_into(&normalize_download_url(url), &part_path).await {
+        Ok(()) => match fs::rename(&part_path, &final_path) {
+            Ok(()) => Ok(final_path),
+            Err(e) => {
+                let _ = fs::remove_file(&part_path);
+                // Kisi aur download ne usi dauran file bana di ho to wahi theek hai.
+                if final_path.exists() {
+                    Ok(final_path)
+                } else {
+                    Err(format!("Sample video save nahi ho saki: {e}"))
+                }
+            }
+        },
+        Err(e) => {
+            let _ = fs::remove_file(&part_path);
+            Err(e)
+        }
+    }
+}
+
+/// Exact resolution label ke liye video dhoondta hai, na mile (ya download
+/// fail ho) to aspect-ratio wali video use karta hai.
 async fn resolve_sample_video_path(
     app: &AppHandle,
     resolution_label: &str,
     aspect_ratio: &str,
 ) -> Result<PathBuf, String> {
     let urls = load_sample_video_urls(app);
+    let mut last_error: Option<String> = None;
 
     for (key, url_map) in [
         (resolution_label, &urls.by_resolution_label),
@@ -173,43 +290,17 @@ async fn resolve_sample_video_path(
         if key.is_empty() {
             continue;
         }
-        let slug = slugify(key);
-
-        if let Ok(resource_dir) = app.path().resource_dir() {
-            let bundled = resource_dir.join("sample-videos").join(format!("{slug}.mp4"));
-            if bundled.exists() {
-                return Ok(bundled);
-            }
-        }
-
-        let cache_dir = app
-            .path()
-            .app_cache_dir()
-            .map_err(|e| format!("Cache dir nahi mila: {e}"))?
-            .join("sample-videos");
-        fs::create_dir_all(&cache_dir).map_err(|e| format!("Cache folder nahi bana: {e}"))?;
-        let cached = cache_dir.join(format!("{slug}.mp4"));
-        if cached.exists() {
-            return Ok(cached);
-        }
-
         if let Some(url) = url_map.get(key).filter(|u| !u.is_empty()) {
-            let response = reqwest::get(url)
-                .await
-                .map_err(|e| format!("Sample video download nahi ho saki: {e}"))?;
-            if !response.status().is_success() {
-                return Err(format!("Sample video download fail hui (HTTP {}).", response.status()));
+            match download_to_cache(app, url).await {
+                Ok(path) => return Ok(path),
+                Err(e) => last_error = Some(e),
             }
-            let bytes = response
-                .bytes()
-                .await
-                .map_err(|e| format!("Sample video download nahi ho saki: {e}"))?;
-            fs::write(&cached, &bytes).map_err(|e| format!("Sample video save nahi hui: {e}"))?;
-            return Ok(cached);
         }
     }
 
-    Err("Is resolution/aspect-ratio ke liye koi sample video configure nahi hai.".to_string())
+    Err(last_error.unwrap_or_else(|| {
+        "Is resolution/aspect-ratio ke liye koi sample video configure nahi hai.".to_string()
+    }))
 }
 
 /// Frontend ko sirf local path chahiye — wo khud `convertFileSrc()` se ek
@@ -222,6 +313,74 @@ pub async fn get_default_video_path(
 ) -> Result<String, String> {
     let path = resolve_sample_video_path(&app, &resolution_label, &aspect_ratio).await?;
     Ok(path.to_string_lossy().to_string())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase", tag = "kind")]
+enum SampleVideosEvent {
+    #[serde(rename = "start")]
+    Start { total: u32 },
+    #[serde(rename = "done")]
+    Done { downloaded: u32 },
+    #[serde(rename = "error")]
+    Error { failed: u32, message: String },
+}
+
+/// App start hone par frontend ye call karta hai. Jo sample videos abhi tak
+/// download nahi hui unhe ek-ek karke download karta hai aur
+/// "sample-videos-progress" events bhejta hai. Sab pehle se maujood hon to
+/// chup-chap return ho jata hai (koi event nahi).
+#[tauri::command]
+pub async fn prefetch_sample_videos(app: AppHandle) -> Result<(), String> {
+    let urls = load_sample_video_urls(&app);
+
+    let mut unique: Vec<String> = urls
+        .by_resolution_label
+        .values()
+        .chain(urls.by_aspect.values())
+        .filter(|u| !u.is_empty())
+        .cloned()
+        .collect();
+    unique.sort();
+    unique.dedup();
+
+    let missing: Vec<String> = unique
+        .into_iter()
+        .filter(|u| cached_path_for(&app, u).map(|p| !p.exists()).unwrap_or(true))
+        .collect();
+
+    if missing.is_empty() {
+        return Ok(());
+    }
+
+    let _ = app.emit(
+        "sample-videos-progress",
+        SampleVideosEvent::Start { total: missing.len() as u32 },
+    );
+
+    let mut downloaded = 0u32;
+    let mut failed = 0u32;
+    let mut last_error = String::new();
+
+    for url in &missing {
+        match download_to_cache(&app, url).await {
+            Ok(_) => downloaded += 1,
+            Err(e) => {
+                failed += 1;
+                last_error = e;
+            }
+        }
+    }
+
+    if failed == 0 {
+        let _ = app.emit("sample-videos-progress", SampleVideosEvent::Done { downloaded });
+    } else {
+        let _ = app.emit(
+            "sample-videos-progress",
+            SampleVideosEvent::Error { failed, message: last_error },
+        );
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------

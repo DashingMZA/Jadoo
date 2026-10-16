@@ -15,6 +15,8 @@ import {
   autostart,
   getAppPreferences,
   onBatchProgress,
+  onSampleVideosProgress,
+  prefetchSampleVideos,
   saveAppPreferences,
   updateTrayLanguage,
 } from "@/lib/tauri-api";
@@ -62,6 +64,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [batchStatus, setBatchStatus] = useState<BatchStatus>("idle");
   const unlistenRef = useRef<(() => void) | null>(null);
+  const sampleUnlistenRef = useRef<(() => void) | null>(null);
   const languageRef = useRef<Language>(DEFAULT_PREFERENCES.language);
   const { showToast } = useToast();
 
@@ -104,6 +107,28 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       unlistenRef.current = un;
     });
 
+    // Sample videos installer ke sath nahi aati — pehli baar app chalne par
+    // background mein Google Drive se download hoti hain. Pehle listener
+    // lagao (taake "start" event miss na ho), phir download shuru karo. Sab
+    // pehle se download hon to Rust koi event nahi bhejta (koi toast nahi).
+    onSampleVideosProgress((e) => {
+      if (e.kind === "start") {
+        showToast(translate(languageRef.current, "toast.sampleDownloading"), {
+          id: "sample-videos",
+          autoDismiss: false,
+        });
+      } else if (e.kind === "done") {
+        showToast(translate(languageRef.current, "toast.sampleReady"), { id: "sample-videos" });
+      } else if (e.kind === "error") {
+        showToast(translate(languageRef.current, "toast.sampleFailed"), { id: "sample-videos" });
+      }
+    })
+      .then((un) => {
+        sampleUnlistenRef.current = un;
+        return prefetchSampleVideos();
+      })
+      .catch(() => {});
+
     // App khulte hi khud update check karo — naya version mile to Later/
     // Update Now wala toast dikhao. Updater configure na hua ho (pubkey
     // waghera) to chup chap fail ho jata hai, koi disruption nahi.
@@ -133,7 +158,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       })
       .catch(() => {});
 
-    return () => unlistenRef.current?.();
+    return () => {
+      unlistenRef.current?.();
+      sampleUnlistenRef.current?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -28,3 +28,8 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Sample videos ab installer ke sath bundle nahi hotin — first run pe Google
+# Drive se download hoti hain (sample-videos.json mein URLs). Local test ke
+# liye bhi yahan mp4 rakhi na jaye.
+src-tauri/sample-videos/

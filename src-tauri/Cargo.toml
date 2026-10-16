@@ -1,9 +1,13 @@
 [package]
 name = "jadoo"
-version = "1.0.14"
+version = "1.0.15"
 description = "Jadoo — batch video logo overlay desktop app"
 authors = ["Zaheer Ahmad"]
-edition = "2021"
+homepage = "https://jadoo.cyou"
+repository = "https://github.com/DashingMZA/Jadoo"
+edition = "2024"
+rust-version = "1.95"
+
 
 [lib]
 name = "jadoo_lib"
@@ -13,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "protocol-asset"] }
 tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"

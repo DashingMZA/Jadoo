@@ -87,6 +87,7 @@ pub fn run() {
             commands::profiles::clear_history,
             commands::profiles::get_app_info,
             commands::ffmpeg::get_default_video_path,
+            commands::ffmpeg::prefetch_sample_videos,
             commands::ffmpeg::start_batch,
             update_tray_language,
         ])

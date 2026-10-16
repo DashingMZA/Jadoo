@@ -15,6 +15,7 @@ import type {
   BatchSettings,
   HistoryRecord,
   LogoProfile,
+  SampleVideosEvent,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -92,6 +93,17 @@ export function saveBatchSettings(settings: BatchSettings): Promise<void> {
  *  leta hai. */
 export function getDefaultVideoPath(resolutionLabel: string, aspectRatio: string): Promise<string> {
   return invoke("get_default_video_path", { resolutionLabel, aspectRatio });
+}
+
+/** App start pe ek baar: jo sample videos abhi download nahi hui unhe background mein download karta hai. */
+export function prefetchSampleVideos(): Promise<void> {
+  return invoke("prefetch_sample_videos");
+}
+
+export function onSampleVideosProgress(
+  callback: (event: SampleVideosEvent) => void,
+): Promise<UnlistenFn> {
+  return listen<SampleVideosEvent>("sample-videos-progress", (e) => callback(e.payload));
 }
 
 // ---------------------------------------------------------------------------
