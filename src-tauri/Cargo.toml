@@ -1,6 +1,6 @@
 [package]
 name = "jadoo"
-version = "1.0.15"
+version = "1.0.16"
 description = "Jadoo — batch video logo overlay desktop app"
 authors = ["Zaheer Ahmad"]
 homepage = "https://jadoo.cyou"
