@@ -24,6 +24,8 @@ export const CRYPTO_OPTIONS: CryptoOption[] = [
   { coin: "USDT", network: "APT - Aptos", address: "0x9ecd779235ec3d7c1b3e99c37deda42a99c03a24a791ed30de2373e5b4c1f944" },
   { coin: "USDT", network: "DOT - Polkadot", address: "158Dp11Ya2eZbWi21AauuTcyZSwbfR1KnWar6AFJBdnfTM8E" },
   { coin: "USDT", network: "XTZ - Tezos", address: "tz2KG1zrupwDnHZwx9cx962yVsfBDvHfS8te" },
+  { coin: "BTC", network: "Bitcoin",  address: "125RMwvGfanp9pkGCd8XR352noYhBMGArG" },
+  { coin: "USDC", network: "ETH -Ethereum (ERC-20)", address: "0xbd0550b2e55b8873945d7e2efd8213eee7807705" },
 ];
 
 export interface LinkOption {
@@ -39,7 +41,7 @@ export const LINK_OPTIONS: LinkOption[] = [
     label: "Buy Me a Coffee",
     url: "https://buymeacoffee.com/dashingmza",
   },
-  { id: "paypal", label: "PayPal.me", url: "https://paypal.me/dashingmza" },
+  { id: "ko-fi", label: "Buy Me a Ko-Fi", url: "https://ko-fi.com/dashingmza" },
 ];
 
 /** Placeholder abhi tak badla nahi gaya? */
