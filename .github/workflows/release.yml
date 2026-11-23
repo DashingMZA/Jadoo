@@ -51,7 +51,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Install pnpm BEFORE setup-node — setup-node's pnpm cache option
       # (below) looks for an already-available pnpm executable.
