@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Jadoo documentation
+    url: https://github.com/DashingMZA/Jadoo#readme
+    about: Start with the README — setup, first sync, and the project status.

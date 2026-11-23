@@ -1,0 +1,61 @@
+name: CI
+
+# CI checks for every push to main and every pull request.
+# Runs the unit and Rust test suites. Two parts of `pnpm test` are
+# intentionally NOT run here:
+# - e2e (`pnpm run test:e2e`) uses `channel: 'msedge'` and the app
+#   targets Windows, so it runs locally on Windows instead.
+# - `tauri build` bundles the NSIS installer only
+#   (bundle targets: ["nsis"] in src-tauri/tauri.conf.json), which
+#   cannot be built on Linux.
+# `pnpm run test:rust` (cargo test) already compiles the full Rust
+# backend, so Rust compile breakage is still caught here. It compiles
+# the Tauri crates, which link system libraries (glib-2.0 and friends),
+# so the Linux system dependencies below are installed first — without
+# them the `glib-sys` build fails with "Package glib-2.0 was not found".
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup pnpm
+        # No `version:` input here: package.json already pins the pnpm
+        # version via `packageManager`, and pnpm/action-setup v6 errors
+        # out when both are set ("Multiple versions of pnpm specified").
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm run test:unit
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
+            patchelf build-essential curl wget file libssl-dev libgtk-3-dev libxdo-dev
+      - name: Rust tests
+        run: pnpm run test:rust

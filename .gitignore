@@ -26,8 +26,12 @@ src-tauri/binaries/ffprobe-*
 Thumbs.db
 
 # Env
-.env
-.env.local
+.env*
+!.env.example
+
+#Key
+jadoo.key
+jadoo.key.pub
 
 # Sample videos ab installer ke sath bundle nahi hotin — first run pe Google
 # Drive se download hoti hain (sample-videos.json mein URLs). Local test ke

@@ -33,7 +33,7 @@ export interface LinkOption {
 }
 
 export const LINK_OPTIONS: LinkOption[] = [
-  { id: "gumroad", label: "Gumroad", url: "https://zuhan5.gumroad.com/" },
+  { id: "gumroad", label: "Gumroad", url: "https://dashingmza.gumroad.com/coffee?wanted=true" },
   {
     id: "buymeacoffee",
     label: "Buy Me a Coffee",

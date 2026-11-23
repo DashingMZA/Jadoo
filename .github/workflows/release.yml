@@ -1,13 +1,21 @@
 name: Release
 
-# Ek git tag jo "v" se shuru ho (jaise v1.0.1) push karne pe ye workflow
-# chalta hai — Windows/macOS/Linux build karta hai aur ek GitHub Release
-# (draft) bana kar sab installers + updater artifacts (latest.json) attach
-# kar deta hai.
+# Pushing a git tag that starts with "v" (for example v1.1.11) runs this
+# workflow — it builds the Windows app and creates a GitHub Release
+# (draft) with the installer, the updater artifacts (latest.json) and
+# the portable ZIP attached.
 #
-# Trigger karne ka tareeka:
-#   git tag v1.0.1
-#   git push origin v1.0.1
+# How to trigger it:
+#   git tag v1.1.11
+#   git push origin v1.1.11
+#
+# Windows only: this app targets Windows (bundle targets: ["nsis"] in
+# src-tauri/tauri.conf.json), matching the upstream releases, which ship
+# a Windows installer and a portable ZIP only.
+#
+# Important GitHub repo secrets (Settings -> Secrets and variables -> Actions):
+#   TAURI_SIGNING_PRIVATE_KEY=(your private key)
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD=(your password)
 
 on:
   push:
@@ -15,8 +23,9 @@ on:
       - "v*"
   workflow_dispatch: {}
 
-# Release create/upload karne ke liye zaroori hai, warna tauri-action
-# "Resource not accessible by integration" jaisi permission error de sakta hai.
+# Required to create the release and upload assets, otherwise
+# tauri-action fails with a permission error such as
+# "Resource not accessible by integration".
 permissions:
   contents: write
 
@@ -44,19 +53,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # pnpm, setup-node se PEHLE install karna zaroori hai — setup-node ka
-      # pnpm cache option (niche) pnpm executable ko already-available dhoondta
-      # hai.
+      # Install pnpm BEFORE setup-node — setup-node's pnpm cache option
+      # (below) looks for an already-available pnpm executable.
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        # Version yahan nahi deni — package.json ka "packageManager": "pnpm@12.4.2"
-        # field khud version pin karta hai; dono jagah dena conflict error deta hai
-        # ("Multiple versions of pnpm specified").
+        uses: pnpm/action-setup@v6
+        # No `version:` input here: package.json already pins the pnpm
+        # version via `packageManager`, and pnpm/action-setup v6 errors
+        # out when both are set ("Multiple versions of pnpm specified").
+        with:
+          run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           cache: pnpm
 
       - name: Verify Node and pnpm
